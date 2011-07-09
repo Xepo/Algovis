@@ -22,6 +22,7 @@ from google.appengine.ext.webapp import util
 from models import CodeSnippet
 from mako.template import Template
 from mako.lookup import TemplateLookup
+import mako.exceptions
 
 mylookup = TemplateLookup(directories=[os.path.join('Templates')])
 def rendertemplate(templatename, **kwargs):

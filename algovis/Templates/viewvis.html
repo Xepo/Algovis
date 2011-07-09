@@ -1,5 +1,6 @@
-<html>
-	<head>
+<%inherit file='base.html'/>
+
+<%block name='header'>
 		<script type="text/javascript" src="static/jquery.js"></script> 
 		<script type="text/javascript" src="static/jquery-linedtextarea.js"></script> 
 		<link href="static/jquery-linedtextarea.css" type="text/css" rel="stylesheet" />
@@ -14,23 +15,21 @@
 		<script type="text/javascript" src="static/js/jquery-ui-1.8.13.custom.min.js"></script>
 		
 		<script type='text/javascript'>
+			function main() {
+				coderunner.setup($('#codeview'), $('#speedslider'), $('#gobutton'), $('#stopbutton'), $('#prevstep'), $('#nextstep'), $('#rcanvas'));
+				//coderunner.setcode(insertionsort.toString() + "\ninsertionsort(sortinglist);\n");
+				//coderunner.setcode(bubblesort.toString() + "\nbubblesort(sortinglist);\n");
+				//coderunner.setcode(selectionsort.toString() + "\nselectionsort(sortinglist);\n");
+				//coderunner.setcode(shellsort.toString() + "\nshellsort(sortinglist);\n");
+				//coderunner.setcode(combsort.toString() + "\ncombsort(sortinglist);\n");
+				//coderunner.setcode(heapify.toString() + siftDown.toString() + heapsort.toString() + "\nheapsort(sortinglist);\n");
+				//coderunner.setcode(getpivotndxbestof3.toString() + quicksorth.toString() + quicksort.toString() + "\nquicksort(sortinglist);\n");
+				//coderunner.setcode(%SETCODEHERE%);
+				jQuery.get("${codeurl}", function(data) { coderunner.setcode(data); coderunner.restartrun(); });
+			}
+		</script>
+</%block>
 
-
-
-	function main() {
-		coderunner.setup($('#codeview'), $('#speedslider'), $('#gobutton'), $('#stopbutton'), $('#prevstep'), $('#nextstep'), $('#rcanvas'));
-		//coderunner.setcode(insertionsort.toString() + "\ninsertionsort(sortinglist);\n");
-		//coderunner.setcode(bubblesort.toString() + "\nbubblesort(sortinglist);\n");
-		//coderunner.setcode(selectionsort.toString() + "\nselectionsort(sortinglist);\n");
-		//coderunner.setcode(shellsort.toString() + "\nshellsort(sortinglist);\n");
-		//coderunner.setcode(combsort.toString() + "\ncombsort(sortinglist);\n");
-		//coderunner.setcode(heapify.toString() + siftDown.toString() + heapsort.toString() + "\nheapsort(sortinglist);\n");
-		//coderunner.setcode(getpivotndxbestof3.toString() + quicksorth.toString() + quicksort.toString() + "\nquicksort(sortinglist);\n");
-		//coderunner.setcode(%SETCODEHERE%);
-		jQuery.get("${codeurl}", function(data) { coderunner.setcode(data); coderunner.restartrun(); });
-	}
-</script>
-</head>
 <body onLoad="main()">
 	<table width='100%'>
 		<tr>
@@ -46,7 +45,6 @@
 		</tr>
 	</table>
 </body>
-</html>
 
 
 
