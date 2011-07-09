@@ -37,6 +37,10 @@ class PreloadHandler(webapp.RequestHandler):
 			cosni.name = os.path.basename(fn)
 			cosni.name = cosni.name[:-3] #Remove .js from name
 
+			if CodeSnippet().all().filter('name =', cosni.name).count(limit=1):
+				print "Skipping"
+				continue
+
 			cosni.description = cosni.name
 
 			with open(os.path.join(defaultdir, fn), 'r') as f:
