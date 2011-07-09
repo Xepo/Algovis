@@ -1,0 +1,7 @@
+<%inherit file="base.html"/>
+
+<ul>
+	% for cosni in codesnippets:
+		<li><a href='/view?id=${cosni.key()}'>${cosni.name}</a></li>
+	% endfor
+</ul>

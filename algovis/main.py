@@ -37,10 +37,8 @@ def rendertemplate(templatename, **kwargs):
 
 class IndexHandler(webapp.RequestHandler):
     def get(self):
-	self.response.out.write("<html><ul>")
-	for cosni in CodeSnippet.all():
-		self.response.out.write("<li><a href='/view?id=%s'>%s</a></li>" % (str(cosni.key()), cosni.name))
-	self.response.out.write("</ul></html>")
+	d = {'codesnippets': CodeSnippet.all()}
+	self.response.out.write(rendertemplate('viewindex.html', **d))
 
 class PreloadHandler(webapp.RequestHandler):
 	def get(self):
