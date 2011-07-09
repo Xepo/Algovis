@@ -64,8 +64,10 @@ class PreloadHandler(webapp.RequestHandler):
 class ViewHandler(webapp.RequestHandler):
 	def get(self):
 		id = self.request.get('id')
+		codesnippet = CodeSnippet.get(db.Key(encoded=id))
 		d = {
-				'codeurl': '/codeview?id=%s' % (id)
+				'codeurl': '/codeview?id=%s' % (id),
+				'codesnippet': codesnippet
 			}
 
 		self.response.out.write(rendertemplate('viewvis.html', **d))
