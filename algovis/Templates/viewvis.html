@@ -25,7 +25,7 @@
 				//coderunner.setcode(heapify.toString() + siftDown.toString() + heapsort.toString() + "\nheapsort(sortinglist);\n");
 				//coderunner.setcode(getpivotndxbestof3.toString() + quicksorth.toString() + quicksort.toString() + "\nquicksort(sortinglist);\n");
 				//coderunner.setcode(%SETCODEHERE%);
-				jQuery.get("${codeurl}", function(data) { coderunner.setcode(data); coderunner.restartrun(); });
+				jQuery.get("${codesnippet.getcodeurl()}", function(data) { coderunner.setcode(data); coderunner.restartrun(); });
 			}
 		</script>
 </%block>
