@@ -1,6 +1,9 @@
 toline = 0;
 newcode = "";
 
+genlist_amttogenerate = 50;
+genlist_maxvalue = 50;
+
 function swapinlist(l, i1, i2)
 {
 	temp = l[i1];
@@ -283,7 +286,7 @@ var coderunner = new function()
 	}
 	this.startrun = function () {
 		this.timer.stop();
-		this.inputlist = genrandomlist(100, 100);
+		this.inputlist = genrandomlist(genlist_amttogenerate, genlist_maxvalue);
 		this.record = [];
 		this.ranlinesmax = 0;
 		this.ranlines = 0;
