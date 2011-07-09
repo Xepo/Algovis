@@ -1,0 +1,9 @@
+
+.codeviewdisabled {
+	background-color: #DDDDDD;
+	color: #000000;
+}
+.codeviewenabled {
+	background-color: #FFFFFF;
+	color: #000000;
+}
