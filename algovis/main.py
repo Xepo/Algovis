@@ -63,10 +63,11 @@ class PreloadHandler(webapp.RequestHandler):
 class ViewHandler(webapp.RequestHandler):
 	def get(self):
 		id = self.request.get('id')
-		with open('visualize_mainview.html', 'r') as f:
-			html = f.read()
-		html = html.replace('%CODEURL%', '/codeview?id=%s' % (id))
-		self.response.out.write(html)
+		d = {
+				'codeurl': '/codeview?id=%s' % (id)
+			}
+
+		self.response.out.write(rendertemplate('viewvis.html', **d))
 
 class CodeViewHandler(webapp.RequestHandler):
 	def get(self):
