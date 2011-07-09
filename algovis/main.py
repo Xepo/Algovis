@@ -14,11 +14,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+import os
+import logging
 from google.appengine.ext import db
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import util
 from models import CodeSnippet
-import os
+from mako.template import Template
+from mako.lookup import TemplateLookup
+
+mylookup = TemplateLookup(directories=[os.path.join('Templates')])
+def rendertemplate(templatename, **kwargs):
+	try:
+		temp = mylookup.get_template(templatename)
+		return temp.render(**kwargs)
+	except:
+		logging.error("Error while processing templates!")
+		logging.error(mako.exceptions.text_error_template().render())
+		raise
+
+
 
 class IndexHandler(webapp.RequestHandler):
     def get(self):
@@ -38,7 +53,6 @@ class PreloadHandler(webapp.RequestHandler):
 			cosni.name = cosni.name[:-3] #Remove .js from name
 
 			if CodeSnippet().all().filter('name =', cosni.name).count(limit=1):
-				print "Skipping"
 				continue
 
 			cosni.description = cosni.name
@@ -64,13 +78,14 @@ class CodeViewHandler(webapp.RequestHandler):
 
 
 def main():
-    application = webapp.WSGIApplication([
-	    ('/', IndexHandler),
-	    ('/view', ViewHandler),
-	    ('/codeview', CodeViewHandler),
-	    ('/preload', PreloadHandler)
-	    ], debug=True)
-    util.run_wsgi_app(application)
+	logging.getLogger().setLevel(logging.DEBUG)
+	application = webapp.WSGIApplication([
+		('/', IndexHandler),
+		('/view', ViewHandler),
+		('/codeview', CodeViewHandler),
+		('/preload', PreloadHandler)
+		], debug=True)
+	util.run_wsgi_app(application)
 
 
 if __name__ == '__main__':
