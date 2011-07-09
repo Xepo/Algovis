@@ -3,7 +3,7 @@
 <body>
 	<ul>
 		% for cosni in codesnippets:
-			<li><a href='${cosni.getvisurl()}'>${cosni.name}</a></li>
+			<li><a href='${getvisurl(cosni)}'>${cosni.name}</a></li>
 		% endfor
 	</ul>
 </body>

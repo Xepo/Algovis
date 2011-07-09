@@ -25,20 +25,22 @@ from mako.lookup import TemplateLookup
 import mako.exceptions
 import new
 
-def extend_codesnippet(cosni):
-	def getvisurl(self):
-		return '/view?id=%s' % (str(self.key()))
-	def getcodeurl(self):
-		return '/codeview?id=%s' % (str(self.key()))
-
-	cosni.getvisurl = new.instancemethod(getvisurl, cosni, cosni.__class__)
-	cosni.getcodeurl = new.instancemethod(getcodeurl, cosni, cosni.__class__)
-	return cosni
-
+def getvisurl(cosni):
+	return '/view?id=%s' % (cosni.key())
+def getcodeurl(cosni):
+	return '/codeview?id=%s' % (cosni.key())
+def getindexurl():
+	return '/'
+def geturlfcns():
+	return {'getvisurl': getvisurl,
+			'getcodeurl': getcodeurl,
+			'getindexurl': getindexurl
+			}
 
 mylookup = TemplateLookup(directories=[os.path.join('Templates')])
 def rendertemplate(templatename, **kwargs):
 	try:
+		kwargs.update(geturlfcns())
 		temp = mylookup.get_template(templatename)
 		return temp.render(**kwargs)
 	except:
@@ -50,7 +52,7 @@ def rendertemplate(templatename, **kwargs):
 
 class IndexHandler(webapp.RequestHandler):
     def get(self):
-	d = {'codesnippets': (extend_codesnippet(x) for x in CodeSnippet.all())}
+	d = {'codesnippets': CodeSnippet.all()}
 	self.response.out.write(rendertemplate('viewindex.html', **d))
 
 class PreloadHandler(webapp.RequestHandler):
@@ -78,7 +80,7 @@ class ViewHandler(webapp.RequestHandler):
 		id = self.request.get('id')
 		codesnippet = CodeSnippet.get(db.Key(encoded=id))
 		d = {
-				'codesnippet': extend_codesnippet(codesnippet)
+				'codesnippet': codesnippet
 			}
 
 		self.response.out.write(rendertemplate('viewvis.html', **d))
