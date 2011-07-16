@@ -92,6 +92,13 @@ class CodeViewHandler(webapp.RequestHandler):
 		cosni = CodeSnippet.get(id)
 		self.response.out.write(cosni.code.strip())
 
+class TestViewHandler(webapp.RequestHandler):
+	def post(self):
+		d = { 
+				'testcode': self.request.get('testcode', '"No code given"')
+				}
+		self.response.out.write(rendertemplate('viewtestcode.html', **d))
+
 
 def main():
 	logging.getLogger().setLevel(logging.DEBUG)
@@ -99,7 +106,8 @@ def main():
 		('/', IndexHandler),
 		('/view', ViewHandler),
 		('/codeview', CodeViewHandler),
-		('/preload', PreloadHandler)
+		('/preload', PreloadHandler),
+		('/testcode', TestViewHandler),
 		], debug=True)
 	util.run_wsgi_app(application)
 

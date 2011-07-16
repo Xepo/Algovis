@@ -1,21 +1,4 @@
-var vis = "!vis-type: bar; !vis-array: myl; !vis-index: ml,mr; !vis-indexrange: current left right; !vis-extrabar: pivot pivot;";
-function getpivotndx(myl, left, right)
-{
-	return Math.floor((right+left)/2);
-}
-function getpivotndxbestof3(myl, left, right)
-{
-	var mid = Math.floor((right+left)/2);
-	var pvs = [left, mid, right];
-	if (myl[pvs[0]] > myl[pvs[1]])
-		swapinlist(pvs, 0, 1);
-	if (myl[pvs[1]] > myl[pvs[2]])
-		swapinlist(pvs, 1, 2);
-	if (myl[pvs[0]] > myl[pvs[1]])
-		swapinlist(pvs, 0, 1);
-
-	return pvs[1];
-}
+var vis = "!vis-type: bar; !vis-array: myl; !vis-index: pivot,ml,mr; !vis-indexrange: current left right;";
 function quicksorth(myl, left, right)
 {
 	if (right <= left)
@@ -26,28 +9,37 @@ function quicksorth(myl, left, right)
 			swapinlist(myl, left, right);
 		return;
 	}
-	var pivotindex = getpivotndxbestof3(myl,left,right);
-	var pivot = myl[pivotindex];
+	var pivot = left;
+	var mid = (left+right)/2;
+
+	if ((myl[right] >= myl[left]) != (myl[right] >= myl[mid]))
+		pivot = right;
+	else if ((myl[mid] >= myl[left]) != (myl[mid] >= myl[right]))
+		pivot = mid;
+
 	var ml = left;
 	var mr = right;
-	swapinlist(myl, pivotindex, right);
 
-	mr--;
+	swapinlist(myl, pivot, ml);
+
+	pivot = ml++;
 
 	while (ml < mr)
 	{
-		while (myl[ml] <= pivot && ml < mr)
+		while (ml < mr && myl[ml] <= myl[pivot])
 			ml++;
-		while (myl[mr] > pivot)
+		while (ml < mr && myl[mr] >= myl[pivot])
 			mr--;
-		if (ml < mr)
-			swapinlist(myl, ml, mr);
+		swapinlist(myl, ml, mr);
 	}
-	mr++;
-	swapinlist(myl, mr, right);
 
-	quicksorth(myl, left, mr-1);
-	quicksorth(myl, mr+1, right);
+	if (myl[ml] > myl[pivot])
+		ml--;
+
+	swapinlist(myl, ml, pivot);
+
+	quicksorth(myl, left, ml-1);
+	quicksorth(myl, ml+1, right);
 }
 function quicksort(l) 
 {

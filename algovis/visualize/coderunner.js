@@ -76,6 +76,10 @@ var coderunner = new function()
 		}
 		else
 			this.showcoderunner = null;
+		if ($('#testcodedata'))
+		{
+			this.testcodedata = $('#testcodedata');
+		}
 		this.wasshowingrunner = false;
 
 		this.stack = [];
@@ -339,7 +343,11 @@ var coderunner = new function()
 	}
 	function canaddsurroundstatements(line) 
 	{
-		return canaddafterstatements(line) && line.indexOf('{') == -1 && line.indexOf('}') == -1 && line.search(/return/) == -1 && line.search(/[^ ;]/) != -1;
+		return canaddafterstatements(line) && line.indexOf('{') == -1 && line.indexOf('}') == -1 && line.search(/return/) == -1 && line.search(/;/) != -1 && line.search(/do/) == -1;
+	}
+	function canaddbraces(line)
+	{
+		return canaddsurroundstatements(line) && line.indexOf('var') == -1;
 	}
 	function canaddafterstatements(line) 
 	{
@@ -351,7 +359,11 @@ var coderunner = new function()
 		{
 			lineno = (i+1).toString();
 			if (canaddsurroundstatements(lines[i]))
+			{
 				lines[i] = "coderunner.beforeline(%HighlightLine%); " + lines[i] + ";coderunner.afterline(%HighlightLine%);";
+				if (canaddbraces(lines[i]))
+					lines[i] = "{" + lines[i] + "}";
+			}
 			lines[i] = lines[i].replace(/%HighlightLine%/g, lineno);
 		}
 		newcode = lines.join('\n');
@@ -370,9 +382,31 @@ var coderunner = new function()
 	}
 	function normalizecode(code) 
 	{
+		var braceregex = /(\s|\n)*\{/ig;
+		codestr = code;
+		codestr = codestr.replace(braceregex, '{');
+		var ifstmt = /^\s*if[^{]*$/ig;
+		var elsestmt = /^\s*else[^{]*$/ig;
 		codestr = "function(sortinglist) {" + code + "; }";
 		codestr = eval("(" + codestr + ")");
 		codestr = codestr.toString();
+		codestr = codestr.replace(braceregex, '{');
+
+		ifmatches = codestr.match(ifstmt);
+		elsematches = codestr.match(elsestmt);
+		if (ifmatches != null || elsematches != null)
+		{
+			var s = '';
+			if (ifmatches != null)
+				for(var i in ifmatches)
+					s += '\n' + ifmatches[i];
+			if (elsematches != null)
+				for(var i in elsematches)
+					s += '\n' + elsematches[i];
+
+			alert("If and else statements must have braces around them.\n" + s);
+			throw "Must have braces around if and else statements!"
+		}
 		return codestr
 	}
 	this.setcode = function (code) {
@@ -381,6 +415,7 @@ var coderunner = new function()
 
 		visualizer.setcode(code);
 		this.code = normalizecode(code);
+		console.log("Normalized code: " + this.code);
 		this.codeview.text(this.code);
 		this.newcode = this.code;
 		this.newcode = this.addafterstmts(this.newcode);
@@ -389,6 +424,7 @@ var coderunner = new function()
 
 		this.updatecodeview();
 
+		this.testcodedata.text(this.newcode);
 		this.newcodef = eval("(" + this.newcode + ")");
 	};
 }
