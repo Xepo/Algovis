@@ -44,16 +44,6 @@ function comparearray(ar1, ar2)
 			return false;
 	return true;
 }
-function genrandomlist(len, max)
-{
-	ret = []
-	for(var i=0; i<len; i++)
-	{
-		var randomnumber=Math.floor(Math.random()*(max+1));
-		ret.push(randomnumber);
-	}
-	return ret;
-}
 var coderunner = new function() 
 {
 	this.setup = function(codeview, speedslider, gobutton, stopbutton, prevbutton, nextbutton, canvas) {
@@ -203,8 +193,8 @@ var coderunner = new function()
 		_TopCodeRunNext_ = 0;
 		var whoafinished = false;
 		try{
-			var sortinglist = this.inputlist.slice(0);
-			if (this.newcodef(sortinglist) == 'finished')
+			var inputval2 = owl.deepCopy(this.inputvalue);
+			if (this.newcodef(inputval2) == 'finished')
 				whoafinished = true;
 		}
 		catch (er) {
@@ -286,7 +276,7 @@ var coderunner = new function()
 	}
 	this.startrun = function () {
 		this.timer.stop();
-		this.inputlist = genrandomlist(genlist_amttogenerate, genlist_maxvalue);
+		this.inputvalue = visualizer.generateinput();
 		this.record = [];
 		this.ranlinesmax = 0;
 		this.ranlines = 0;
@@ -362,7 +352,10 @@ var coderunner = new function()
 		code += ';';
 
 		visualizer.setcode(code);
+		this.inputvalue = visualizer.generateinput();
 		codestr = eval("function(sortinglist) {" + code + "; }").toString();
+		this.code = codestr;
+		this.codeview.text(codestr);
 		this.newcode = codestr;
 		this.newcode = this.addafterstmts(this.newcode);
 		this.newcode = "function(sortinglist) { " + visualizer.getinitstmt() + "cr_newf = " + this.newcode + "; cr_newf(sortinglist); return 'finished'; }";

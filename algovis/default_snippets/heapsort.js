@@ -8,9 +8,9 @@ function heapsort(l)
 
 	while (sortedend > 0)
 	{
-		swapinlist(myl, 0, sortedend-1);
+		swapinlist(myl, 0, sortedend);
 		sortedend--;
-		siftDown(myl, 0, sortedend-1);
+		siftDown(myl, 0, sortedend);
 	}
 
 }
@@ -20,7 +20,7 @@ function heapify(myl)
 
 	while (start >= 0)
 	{
-		siftDown(myl, start, myl.length-1);
+		siftDown(myl, start, myl.length);
 		start--;
 	}
 }
@@ -28,13 +28,13 @@ function siftDown(myl, start, end)
 {
 	root = start;
 
-	while (root*2+1 <= end)
+	while (root*2+1 < end)
 	{
-		child = root * 2 + 1;
-		swap = root;
-		if (myl[swap] < myl[child])
+		var child = root * 2 + 1;
+		var swap = root;
+		if (myl[child] > myl[swap])
 			swap = child;
-		if (child+1 <= end && myl[swap] < myl[child+1])
+		if (child+1 < end && myl[child+1] > myl[swap])
 			swap = child+1;
 		if (swap != root)
 		{

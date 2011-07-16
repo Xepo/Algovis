@@ -64,15 +64,16 @@ class PreloadHandler(webapp.RequestHandler):
 
 			cosni.name = os.path.basename(fn)
 			cosni.name = cosni.name[:-3] #Remove .js from name
-
-			if CodeSnippet().all().filter('name =', cosni.name).count(limit=1):
-				continue
-
 			cosni.description = cosni.name
+
+			for storedcosni in CodeSnippet().all().filter('name =', cosni.name):
+				self.response.out.write("Deleting %s<br/>" % (cosni.name))
+				storedcosni.delete()
 
 			with open(os.path.join(defaultdir, fn), 'r') as f:
 				cosni.code = f.read()
 
+			self.response.out.write("Storing %s<br/>" % (cosni.name))
 			cosni.put()
 
 class ViewHandler(webapp.RequestHandler):

@@ -12,6 +12,16 @@ function isObject(obj) {
 	else
 		return true;
 }
+function genrandomlist(len, max)
+{
+	ret = []
+	for(var i=0; i<len; i++)
+	{
+		var randomnumber=Math.floor(Math.random()*(max+1));
+		ret.push(randomnumber);
+	}
+	return ret;
+}
 function deepCompare(obj1, obj2)
 {
 	if (!isvalid(obj1) != !isvalid(obj2))
@@ -106,6 +116,11 @@ var visualizer_bars = function()
 		}
 		return ret + "}";
 	}
+	this.generateinput = function()
+	{
+		console.log("Generating input");
+		return genrandomlist(25, 25);
+	}
 	this.needupdate = function(values)
 	{
 		ret = !deepCompare(this.currentvalues, values);
@@ -126,7 +141,6 @@ var visualizer_bars = function()
 	}
 	this.resetsettings = function()
 	{
-		this.vistype = null;
 		this.visarray = null;
 		this.visindex = [];
 		this.visindexranges = [];
@@ -262,6 +276,148 @@ var visualizer_bars = function()
 		}
 	}
 }
+var visualizer_graph = new function()
+{
+	this.setup = function(canvas, rect, settings)
+	{
+		this.canvas = canvas;
+		this.canvasrect = rect;
+		this.setsettings(settings);
+	}
+	this.reset = function()
+	{
+		this.currentvalues = {'visarray': []};
+	}
+	this.resetsettings = function()
+	{
+		this.visadjmatrix = null;
+		this.visedge = [];
+		this.visvertex = [];
+		this.reset();
+	}
+	this.setsettings = function(settings)
+	{
+		this.resetsettings();
+		commands = settings;
+		for (var i in commands)
+		{
+			command = commands[i][0];
+			param = commands[i][1];
+			if (command == 'adjmatrix')
+				this.visadjmatrix = param;
+			else if (command == 'highlightedge')
+			{
+				this.visedge = this.visedge.concat(param.split('-'));
+			}
+			else if (command == 'highlightvertex')
+			{
+				this.visvertex = this.visvertex.concat(param.split('-'));
+			}
+		}
+		assert(this.visadjmatrix);
+	}
+
+	this.getinitstmt = function()
+	{
+		retvars = this.visadjmatrix;
+
+		vars = retvars.match(/[a-zA-Z][a-zA-Z0-9]*(?!\()/g);
+
+		return "var " + vars.join('=null,') + '=null;';
+	}
+	this.getvaluesasparameter = function() 
+	{
+		ret = "{'visadjmatrix': " + this.visadjmatrix;
+		return ret + "}";
+	}
+	this.needupdate = function(values)
+	{
+		ret = !deepCompare(this.currentvalues, values);
+		return ret;
+	}
+	this.afterstmt = function(values)
+	{
+		if (values && values.hasOwnProperty('visadjmatrix') && values.visadjmatrix)
+			this.currentvalues = owl.deepCopy(values);
+	}
+	this.generateinput = function()
+	{
+		var size=22;
+		var ret = [[]];
+
+		var line = [];
+		for(var i=0; i<size; i++)
+			line.push(0);
+
+		for(var i=0; i<size; i++)
+			ret.push(line);
+
+		for(var i=0; i<size*size/2; i++)
+		{
+			if (Math.random() < 0.5)
+				continue;
+
+			var first=Math.floor(Math.random()*(size));
+			var second=Math.floor(Math.random()*(size));
+
+			ret[first][second] = 1;
+		}
+
+		this.positions = [];
+	}
+	this.render = function()
+	{
+		this.render_graph(this.currentvalues);
+	}
+	this.render_graph = function(values) 
+	{
+		if (isvalid(values) && isvalid(values.visadjmatrix) && values.visadjmatrix.length > 0)
+		{}
+		else
+		{
+			console.log("undefinedrender");
+			return;
+		}
+		var adjmatrix = values.visadjmatrix;
+
+		if (this.positions.length == 0)
+		{
+			//Randomly generate position for each vertex in graph
+			for(var i=0; i<adjmatrix.length; i++)
+			{
+				var x = Math.floor(this.canvas.width() * Math.random()) % 10;
+				var y = Math.floor(this.canvas.height() * Math.random()) % 10;
+				this.positions.push([x,y]);
+			}
+		}
+
+		var context = this.canvas[0].getContext('2d');
+		context.strokeStyle = "rgb(0,0,0)";
+
+		//Draw vertices
+		for(var i=0; i<adjmatrix.length; i++)
+		{
+			var pos = this.positions[i];
+			context.arc(pos[0], pos[1], 3, 0, 2*Math.PI, 0);
+		}
+
+		//Draw edges
+		context.strokeStyle = "rgb(25,25,25)";
+		for(var i=0; i<adjmatrix.length; i++)
+		{
+			for(var j=0; j<adjmatrix.length; j++)
+			{
+				if (adjmatrix[i][j] > 0)
+				{
+					var posFrom = this.positions[i];
+					var posTo = this.positions[j];
+					context.moveTo(posFrom[0], posFrom[1]);
+					context.lineTo(posTo[0], posTo[1]);
+				}
+			}
+		}
+	}
+}
 var visualizer = new function() 
 {
 	this.setup = function(canvas)
@@ -283,6 +439,10 @@ var visualizer = new function()
 		for(var i in this.visualizers)
 			valparams.push(this.visualizers[i].getvaluesasparameter());
 		return '[' + valparams.join(',') + ']';
+	}
+	this.generateinput = function() 
+	{
+		return this.visualizers[0].generateinput();
 	}
 	this.clearcanvas = function() {
 		this.canvas[0].width = this.canvas[0].width;
@@ -339,6 +499,12 @@ var visualizer = new function()
 		if (vistype == 'bar')
 		{
 			var newvis = new visualizer_bars();
+			newvis.setup(this.canvas, [], viscommands);
+			this.visualizers.push(newvis);
+		}
+		else if (vistype == 'graph')
+		{
+			var newvis = new visualizer_graph();
 			newvis.setup(this.canvas, [], viscommands);
 			this.visualizers.push(newvis);
 		}
