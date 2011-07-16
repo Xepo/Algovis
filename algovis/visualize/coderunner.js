@@ -4,6 +4,7 @@ newcode = "";
 genlist_amttogenerate = 50;
 genlist_maxvalue = 50;
 
+myundef = [-12121121]
 function swapinlist(l, i1, i2)
 {
 	temp = l[i1];
@@ -20,6 +21,8 @@ function isvalid(variable)
 		if (typeof variable == 'undefined')
 			return false;
 		else if (variable === null)
+			return false;
+		else if (variable == myundef)
 			return false;
 		else if (variable || (variable.toString() && variable+1))
 			return true;
@@ -81,6 +84,8 @@ var coderunner = new function()
 
 		this.record = []
 
+		this.inputvalue = myundef;
+
 		visualizer.setup(canvas);
 	};
 	this.enablecodeview = function(b) {
@@ -107,7 +112,7 @@ var coderunner = new function()
 		else
 		{
 			this.enablecodeview(true);
-			if (!this.wasshowingrunner && this.code != this.codeview.val())
+			if (!this.wasshowingrunner && this.rawcode != this.codeview.val())
 				this.setcode(this.codeview.val());
 			this.codeview.val(this.code);
 			if (this.state == "stopped")
@@ -231,6 +236,9 @@ var coderunner = new function()
 
 			//console.log("Ranlinesmax = " + this.ranlinesmax);
 
+			if (!isvalid(this.inputvalue) || this.inputvalue.length)
+				this.inputvalue = visualizer.generateinput();
+			console.log("Using input " + this.inputvalue);
 			jumpto = this.ranlinesmax+(this.runstep*10000);
 			prevranlinesmax = this.ranlinesmax;
 			this.ranlinesmax = jumpto;
@@ -276,7 +284,6 @@ var coderunner = new function()
 	}
 	this.startrun = function () {
 		this.timer.stop();
-		this.inputvalue = visualizer.generateinput();
 		this.record = [];
 		this.ranlinesmax = 0;
 		this.ranlines = 0;
@@ -315,6 +322,7 @@ var coderunner = new function()
 		this.pauserun();
 		this.state = "stopped";
 		this.ranlinesmax = 0;
+		this.inputvalues = myundef;
 
 		this.stoppedtime = (new Date).getTime();
 		console.log("Time of run: " + (this.stoppedtime - this.startedtime));
@@ -348,11 +356,12 @@ var coderunner = new function()
 	}
 	this.setcode = function (code) {
 		this.code = code;
+		this.rawcode = code;
 		this.codeview.text(code);
 		code += ';';
 
 		visualizer.setcode(code);
-		this.inputvalue = visualizer.generateinput();
+		console.log("function(sortinglist) { " + code + "; }");
 		codestr = eval("function(sortinglist) {" + code + "; }").toString();
 		this.code = codestr;
 		this.codeview.text(codestr);

@@ -133,7 +133,21 @@ var visualizer_bars = function()
 	}
 	this.render = function()
 	{
-		this.render_bars(this.currentvalues);
+		var values = this.currentvalues;
+		if (isvalid(values) && isvalid(values.visarray) && values.visarray.length > 0)
+		{}
+		else
+		{
+			console.log("undefinedrender");
+			return;
+		}
+
+		var context = this.canvas[0].getContext('2d');
+		var w = this.canvas.width(), h=this.canvas.height();
+		var extrabars = valueOrDefault(values.extrabars, []);
+		while (extrabars.length < this.visextrabars.length)
+			extrabars.push(['', -1])
+		renderer.render_bars(context, w, h, values.visarray, values.indexes, values.indexranges, extrabars);
 	}
 	this.reset = function()
 	{
@@ -179,104 +193,8 @@ var visualizer_bars = function()
 		}
 		assert(this.visarray);
 	}
-
-	this.render_bars = function(values) 
-	{
-		if (isvalid(values) && isvalid(values.visarray) && values.visarray.length > 0)
-		{}
-		else
-		{
-			console.log("undefinedrender");
-			return;
-		}
-		var l = values.visarray;
-		var highlightindex = valueOrDefault(values.indexes, []);
-		var highlightindexrange = valueOrDefault(values.indexranges, []);
-		var extrabars = valueOrDefault(values.extrabars, []);
-		var w = this.canvas.width();
-		var h = this.canvas.height();
-		var barh = h - 50;
-
-		totalbars = l.length;
-		var left = 20;
-		if (this.visextrabars.length>0)
-			totalbars += 2 + this.visextrabars.length;
-		var barw = (w - 20 - left) / totalbars;
-		if (totalbars > l.length)
-			left += (totalbars - l.length) * barw;
-
-		var maxv = 0;
-		for (i=0; i<l.length; i++)
-			if (l[i] > maxv)
-				maxv = l[i];
-		var barhstep = ((barh-5) / maxv);
-
-		var context = this.canvas[0].getContext('2d');
-		context.strokeStyle = "rgb(0,0,0)";
-		for (var i=0; i<l.length; i++)
-		{
-			var highlightloc = highlightindex.indexOf(i);
-			if (highlightloc != -1)
-				context.fillStyle = highlightcolors[highlightloc];
-			else
-				context.fillStyle = "rgb(125,125,125)";
-			context.fillRect(left+i*barw, barh-(barhstep*l[i]), barw, barhstep*l[i]);
-			context.strokeRect(left+i*barw, barh-(barhstep*l[i]), barw, barhstep*l[i]);
-		}
-		var extraleft = barw;
-
-		for (var i=0; i<extrabars.length; i++)
-		{
-			if (!isvalid(extrabars[i]) || !isvalid(extrabars[i][0]) || !isvalid(extrabars[i][1]))
-				continue;
-			var name = extrabars[i][0];
-			var val = extrabars[i][1];
-			context.fillStyle = "rgb(125,125,125)";
-			context.fillRect(extraleft+i*barw, barh-(barhstep*val), barw, barhstep*val);
-			context.strokeRect(extraleft+i*barw, barh-(barhstep*val), barw, barhstep*val);
-
-			context.fillStyle = "rgb(0,0,0)";
-			//context.font = "12px sans-serif";
-			context.textAlign = "center";
-			context.textBaseline = "top";
-			context.fillText(name, extraleft+i*barw+barw/2., h-25);
-		}
-
-		h = this.canvas.height();
-
-		for(var i in highlightindexrange)
-		{
-			var name = highlightindexrange[i][0];
-			var low = highlightindexrange[i][1];
-			var high = highlightindexrange[i][2];
-
-			if (!isvalid(name) || !isvalid(low) || !isvalid(high))
-				continue;
-
-			if (low > high)
-				continue;
-
-			var l = left+low*barw;
-			var r = left+high*barw+barw;
-			var m = (l+r)/2;
-			context.beginPath();
-			context.moveTo(l, h - 45);
-			context.lineTo(l, h - 35);
-			context.lineTo(r, h - 35);
-			context.lineTo(r, h - 45);
-			context.moveTo(m, h - 35);
-			context.lineTo(m, h - 30);
-
-			context.stroke();
-
-			//context.font = "12px sans-serif";
-			context.textAlign = "center";
-			context.textBaseline = "top";
-			context.fillText(name, m, h-25);
-		}
-	}
 }
-var visualizer_graph = new function()
+var visualizer_graph = function()
 {
 	this.setup = function(canvas, rect, settings)
 	{
@@ -314,6 +232,8 @@ var visualizer_graph = new function()
 				this.visvertex = this.visvertex.concat(param.split('-'));
 			}
 		}
+		if (!isvalid(this.visadjmatrix))
+			throw "Need vis-adjmatrix!";
 		assert(this.visadjmatrix);
 	}
 
@@ -342,7 +262,8 @@ var visualizer_graph = new function()
 	}
 	this.generateinput = function()
 	{
-		var size=22;
+		console.log("Generating matrix");
+		var size=4;
 		var ret = [[]];
 
 		var line = [];
@@ -354,68 +275,36 @@ var visualizer_graph = new function()
 
 		for(var i=0; i<size*size/2; i++)
 		{
-			if (Math.random() < 0.5)
+			if (Math.random() < 0.8)
 				continue;
 
 			var first=Math.floor(Math.random()*(size));
 			var second=Math.floor(Math.random()*(size));
+			if (first == second)
+				continue;
 
 			ret[first][second] = 1;
 		}
 
 		this.positions = [];
+
+		return ret;
 	}
 	this.render = function()
 	{
-		this.render_graph(this.currentvalues);
-	}
-	this.render_graph = function(values) 
-	{
-		if (isvalid(values) && isvalid(values.visadjmatrix) && values.visadjmatrix.length > 0)
+		var values = this.currentvalues;
+		if (isvalid(values) && values.hasOwnProperty('visadjmatrix') && isvalid(values.visadjmatrix) && values.visadjmatrix.length > 0)
 		{}
 		else
 		{
 			console.log("undefinedrender");
 			return;
 		}
-		var adjmatrix = values.visadjmatrix;
-
-		if (this.positions.length == 0)
-		{
-			//Randomly generate position for each vertex in graph
-			for(var i=0; i<adjmatrix.length; i++)
-			{
-				var x = Math.floor(this.canvas.width() * Math.random()) % 10;
-				var y = Math.floor(this.canvas.height() * Math.random()) % 10;
-				this.positions.push([x,y]);
-			}
-		}
 
 		var context = this.canvas[0].getContext('2d');
-		context.strokeStyle = "rgb(0,0,0)";
+		var w = this.canvas.width(), h=this.canvas.height();
 
-		//Draw vertices
-		for(var i=0; i<adjmatrix.length; i++)
-		{
-			var pos = this.positions[i];
-			context.arc(pos[0], pos[1], 3, 0, 2*Math.PI, 0);
-		}
-
-		//Draw edges
-		context.strokeStyle = "rgb(25,25,25)";
-		for(var i=0; i<adjmatrix.length; i++)
-		{
-			for(var j=0; j<adjmatrix.length; j++)
-			{
-				if (adjmatrix[i][j] > 0)
-				{
-					var posFrom = this.positions[i];
-					var posTo = this.positions[j];
-					context.moveTo(posFrom[0], posFrom[1]);
-					context.lineTo(posTo[0], posTo[1]);
-				}
-			}
-		}
+		this.positions = renderer.render_graph(context, w, h, this.positions, values.visadjmatrix);
 	}
 }
 var visualizer = new function() 
