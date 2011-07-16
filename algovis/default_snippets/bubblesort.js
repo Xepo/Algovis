@@ -1,6 +1,6 @@
+var vis = "!vis-type: bar; !vis-array: myl; !vis-index: i; !vis-index: i-1;";
 function bubblesort(l)
 {
-	var vis = "!vis-type: bar; !vis-array: myl; !vis-index: i; !vis-index: i-1;";
 	var swapped;
 	var myl = l;
 	do

@@ -1,6 +1,6 @@
+var vis = "!vis-type: bar; !vis-array: myl; !vis-index: i,i+gap;";
 function combsort(l)
 {
-	var vis = "!vis-type: bar; !vis-array: myl; !vis-index: i,i+gap;";
 	var myl = l;
 	var gap = l.length;
 	var swapped = true;

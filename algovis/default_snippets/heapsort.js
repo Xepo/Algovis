@@ -1,6 +1,6 @@
+var vis = "!vis-type: bar; !vis-array: myl; !vis-index: root,child,swap; !vis-indexrange: sorted sortedend lastindex;";
 function heapsort(l)
 {
-	var vis = "!vis-type: bar; !vis-array: myl; !vis-index: root,child,swap; !vis-indexrange: sorted sortedend lastindex;";
 	var myl = l;
 	lastindex = myl.length-1;
 	sortedend = myl.length;

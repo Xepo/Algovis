@@ -1,3 +1,4 @@
+var vis = "!vis-type: bar; !vis-array: myl; !vis-index: ml,mr; !vis-indexrange: current left right; !vis-extrabar: pivot pivot;";
 function getpivotndx(myl, left, right)
 {
 	return Math.floor((right+left)/2);
@@ -50,8 +51,6 @@ function quicksorth(myl, left, right)
 }
 function quicksort(l) 
 {
-	var vis = "!vis-type: bar; !vis-array: myl; !vis-index: ml,mr; !vis-indexrange: current left right; !vis-extrabar: pivot pivot;";
-
 	var myl = l;
 	quicksorth(myl, 0, myl.length-1);
 	return myl;

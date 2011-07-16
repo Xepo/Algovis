@@ -112,7 +112,7 @@ var coderunner = new function()
 		else
 		{
 			this.enablecodeview(true);
-			if (!this.wasshowingrunner && this.rawcode != this.codeview.val())
+			if (!this.wasshowingrunner && this.code != this.codeview.val())
 				this.setcode(this.codeview.val());
 			this.codeview.val(this.code);
 			if (this.state == "stopped")
@@ -221,7 +221,13 @@ var coderunner = new function()
 		visualizer.nextstep();
 		if (this.state != "playing" && this.state != 'paused')
 			return;
+		if (!visualizer.isready())
+		{
+			this.stoprun();
+			return;
+		}
 		amt = typeof(amt) != 'undefined' ? amt : this.runstep;
+
 
 		this.queueup = this.ranlinesmax;
 		this.ranlinesmax = this.ranlinesmax+amt;
@@ -236,7 +242,7 @@ var coderunner = new function()
 
 			//console.log("Ranlinesmax = " + this.ranlinesmax);
 
-			if (!isvalid(this.inputvalue) || this.inputvalue.length)
+			if (!isvalid(this.inputvalue))
 				this.inputvalue = visualizer.generateinput();
 			console.log("Using input " + this.inputvalue);
 			jumpto = this.ranlinesmax+(this.runstep*10000);
@@ -299,7 +305,10 @@ var coderunner = new function()
 	}
 	this.gobuttonclick = function() {
 		if (this.state == 'stopped')
+		{
+			this.inputvalue = myundef;
 			this.startrun();
+		}
 		else if (this.state == 'playing')
 			this.pauserun();
 		else if (this.state == 'paused')
@@ -322,19 +331,26 @@ var coderunner = new function()
 		this.pauserun();
 		this.state = "stopped";
 		this.ranlinesmax = 0;
-		this.inputvalues = myundef;
 
 		this.stoppedtime = (new Date).getTime();
 		console.log("Time of run: " + (this.stoppedtime - this.startedtime));
 
 		this.updatecodeview();
 	}
+	function canaddsurroundstatements(line) 
+	{
+		return canaddafterstatements(line) && line.indexOf('{') == -1 && line.indexOf('}') == -1 && line.search(/return/) == -1 && line.search(/[^ ;]/) != -1;
+	}
+	function canaddafterstatements(line) 
+	{
+		return line.search(/for *\(/) == -1 && (line.search(/{/) != -1 || line.search(/function/) == -1);
+	}
 	this.updatehighlightlines = function(code) {
 		lines = code.split('\n');
 		for(i=0; i<lines.length; i++)
 		{
 			lineno = (i+1).toString();
-			if (lines[i].indexOf('{') == -1 && lines[i].indexOf('}') == -1 && lines[i].search(/return/) == -1 && lines[i].search(/[^ ;]/) != -1)
+			if (canaddsurroundstatements(lines[i]))
 				lines[i] = "coderunner.beforeline(%HighlightLine%); " + lines[i] + ";coderunner.afterline(%HighlightLine%);";
 			lines[i] = lines[i].replace(/%HighlightLine%/g, lineno);
 		}
@@ -346,32 +362,33 @@ var coderunner = new function()
 		lines = code.split('\n');
 		for(i=0; i<lines.length; i++)
 		{
-			if (lines[i].search(/for *\(/) == -1)
+			if (canaddafterstatements(lines[i]))
 					lines[i] = lines[i].replace(/;/g, "; coderunner.afterstmt(%VisualizerParameters%, %HighlightLine%);");
-			if (lines[i].search(/afterstmt/i) == -1)
-				lines[i] += "; coderunner.afterstmt(%VisualizerParameters%, %HighlightLine%);";
 		}
 		return lines.join('\n');
 
 	}
+	function normalizecode(code) 
+	{
+		codestr = "function(sortinglist) {" + code + "; }";
+		codestr = eval("(" + codestr + ")");
+		codestr = codestr.toString();
+		return codestr
+	}
 	this.setcode = function (code) {
 		this.code = code;
-		this.rawcode = code;
-		this.codeview.text(code);
 		code += ';';
 
 		visualizer.setcode(code);
-		console.log("function(sortinglist) { " + code + "; }");
-		codestr = eval("function(sortinglist) {" + code + "; }").toString();
-		this.code = codestr;
-		this.codeview.text(codestr);
-		this.newcode = codestr;
+		this.code = normalizecode(code);
+		this.codeview.text(this.code);
+		this.newcode = this.code;
 		this.newcode = this.addafterstmts(this.newcode);
 		this.newcode = "function(sortinglist) { " + visualizer.getinitstmt() + "cr_newf = " + this.newcode + "; cr_newf(sortinglist); return 'finished'; }";
 		this.newcode = this.updatehighlightlines(this.newcode);
 
 		this.updatecodeview();
 
-		this.newcodef = eval(this.newcode);
+		this.newcodef = eval("(" + this.newcode + ")");
 	};
 }

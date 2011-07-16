@@ -1,6 +1,6 @@
+var vis = "!vis-type: bar; !vis-array: myl; !vis-index: ipos, i, imin;  !vis-indexrange: sorted 0 ipos-1;";
 function selectionsort(l)
 {
-	var vis = "!vis-type: bar; !vis-array: myl; !vis-index: ipos, i, imin;  !vis-indexrange: sorted 0 ipos-1;";
 	var myl = l;
 	var ipos, imin;
 	for(ipos = 0; ipos<myl.length; ipos++)

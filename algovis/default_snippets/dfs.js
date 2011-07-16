@@ -1,4 +1,4 @@
-//!vis-type: graph; !vis-adjmatrix: adjmatrix;
+var vis="!vis-type: graph; !vis-adjmatrix: adjmatrix;";
 function dfs(adjmatrix)
 {
 	for(var i=0; i<1000; i++)

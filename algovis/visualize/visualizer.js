@@ -75,6 +75,10 @@ var visualizer_bars = function()
 		this.canvasrect = rect;
 		this.setsettings(settings);
 	}
+	this.isready = function()
+	{
+		return true;
+	}
 	this.getinitstmt = function()
 	{
 		retvars = this.visarray;
@@ -202,6 +206,10 @@ var visualizer_graph = function()
 		this.canvasrect = rect;
 		this.setsettings(settings);
 	}
+	this.isready = function()
+	{
+		return true;
+	}
 	this.reset = function()
 	{
 		this.currentvalues = {'visarray': []};
@@ -271,7 +279,7 @@ var visualizer_graph = function()
 			line.push(0);
 
 		for(var i=0; i<size; i++)
-			ret.push(line);
+			ret.push(owl.deepCopy(line));
 
 		for(var i=0; i<size*size/2; i++)
 		{
@@ -400,8 +408,20 @@ var visualizer = new function()
 		else
 			throw "No such vistype:" + vistype;
 	}
+	this.isready = function()
+	{
+		bGood = 0;
+		for (v in this.visualizers)
+		{
+			if (!this.visualizers[v].isready())
+				return false;
+			bGood = 1;
+		}
+		return bGood;
+	}
 	this.setcode = function(code)
 	{
+		console.log("vis: Setting code");
 		this.resetcode();
 		commands = this.findcommands(code);
 		var curvis = null;

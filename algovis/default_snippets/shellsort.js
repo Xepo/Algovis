@@ -1,6 +1,6 @@
+var vis = "!vis-type: bar; !vis-array: myl; !vis-index: i,i-inc,j;  !vis-extrabar: moving temp;";
 function shellsort(l)
 {
-	var vis = "!vis-type: bar; !vis-array: myl; !vis-index: i,i-inc,j;  !vis-extrabar: moving temp;";
 	var myl = l;
 	var inc = Math.round(myl.length/2);
 	while (inc > 0)
