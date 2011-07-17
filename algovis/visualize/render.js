@@ -1,3 +1,7 @@
+/* Algovis
+ * Author: Isaiah Damron <Isaiah+Algovis at Trifault dot net>
+ */
+
 var renderer = new function() {
 	/* context - Context to draw to
 	 * visarray - Array of heights to draw bars

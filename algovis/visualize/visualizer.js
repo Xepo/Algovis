@@ -1,3 +1,7 @@
+/* Algovis
+ * Author: Isaiah Damron <Isaiah+Algovis at Trifault dot net>
+ */
+
 function isArray(obj) {
 	//returns true is it is an array
 	if (obj.constructor.toString().indexOf("Array") == -1)

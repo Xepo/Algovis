@@ -1,3 +1,7 @@
+/* Algovis
+ * Author: Isaiah Damron <Isaiah+Algovis at Trifault dot net>
+ */
+
 toline = 0;
 newcode = "";
 

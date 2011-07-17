@@ -1,3 +1,7 @@
+#!/usr/bin/env python
+# Algovis
+# Author: Isaiah Damron <Isaiah+Algovis at Trifault dot net>
+
 from google.appengine.ext import db
 
 class CodeSnippet(db.Model):
