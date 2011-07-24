@@ -32,7 +32,7 @@ window.renderer = new ->
     i = 0
     
     while i < extrabars.length
-      continue  if not isvalid(extrabars[i]) or not isvalid(extrabars[i][0]) or not isvalid(extrabars[i][1]) or extrabars[i][1] == -1
+      continue  if not extrabars?[i]? or not extrabars?[i]?[0]? or not extrabars?[i]?[1]? or extrabars?[i]?[1]? == -1
       name = extrabars[i][0]
       val = extrabars[i][1]
       context.fillStyle = "rgb(125,125,125)"
@@ -47,7 +47,7 @@ window.renderer = new ->
       name = highlightindexrange[i][0]
       low = highlightindexrange[i][1]
       high = highlightindexrange[i][2]
-      continue  if not isvalid(name) or not isvalid(low) or not isvalid(high)
+      continue  if not name? or not low? or not high?
       continue  if low > high
       l = left + low * barw
       r = left + high * barw + barw

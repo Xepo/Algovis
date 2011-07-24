@@ -3,22 +3,6 @@ swapinlist = (l, i1, i2) ->
   l[i1] = l[i2]
   l[i2] = temp
   true
-isdefined = (variable) ->
-  (if (typeof (window[variable]) == "undefined") then false else true)
-isvalid = (variable) ->
-  try
-    if typeof variable == "undefined"
-      return false
-    else if variable == null
-      return false
-    else if variable == myundef
-      return false
-    else return true  if variable or (variable.toString() and variable + 1)
-    return false
-  catch er
-    return false
-window.isdefined = isdefined
-window.isvalid = isvalid
 assert = (condition) ->
   return true  if condition
   throw "Assertion failed."
@@ -28,14 +12,13 @@ comparearray = (ar1, ar2) ->
   
   while i < ar1.length
     return false  unless ar1[i] == ar2[i]
-    i+=1
+    i++
   true
 window.assert = assert
 toline = 0
 newcode = ""
 genlist_amttogenerate = 50
 genlist_maxvalue = 50
-myundef = [ -12121121 ]
 coderunnerclass = ->
   canaddsurroundstatements = (line) ->
     canaddafterstatements(line) and line.indexOf("{") == -1 and line.indexOf("}") == -1 and line.search(/return/) == -1 and line.search(/;/) != -1 and line.search(/do/) == -1
@@ -108,7 +91,7 @@ coderunnerclass = ->
     @state = "stopped"
     @updatespeed()
     @record = []
-    @inputvalue = myundef
+    @inputvalue = null
     visualizer.setup canvas
   
   @enablecodeview = (b) ->
@@ -173,7 +156,7 @@ coderunnerclass = ->
     i = 0
     c = @getdepth.caller
     while c
-      i+=1
+      i++
       c = c.caller
   
   @beforeline = (highlightline) ->
@@ -225,7 +208,7 @@ coderunnerclass = ->
       visualizer.afterstmt owl.deepCopy(@record[@ranlinesmax][1])
       finished = false
     else
-      @inputvalue = visualizer.generateinput()  unless isvalid(@inputvalue)
+      @inputvalue ?= visualizer.generateinput()
       console.log "Using input " + @inputvalue
       jumpto = @ranlinesmax + (@runstep * 10000)
       prevranlinesmax = @ranlinesmax
@@ -273,7 +256,7 @@ coderunnerclass = ->
   
   @gobuttonclick = ->
     if @state == "stopped"
-      @inputvalue = myundef
+      @inputvalue = null
       @startrun()
     else if @state == "playing"
       @pauserun()
@@ -312,7 +295,7 @@ coderunnerclass = ->
         lines[i] = "coderunner.beforeline(%HighlightLine%); " + lines[i] + ";coderunner.afterline(%HighlightLine%);"
         lines[i] = "{" + lines[i] + "}"  if canaddbraces(lines[i])
       lines[i] = lines[i].replace(/%HighlightLine%/g, lineno)
-      i+=1
+      i++
     newcode = lines.join("\n")
     newcode = newcode.replace(/%VisualizerParameters%/g, visualizer.getvaluesasparameter())
     newcode
@@ -322,7 +305,7 @@ coderunnerclass = ->
     i = 0
     while i < lines.length
       lines[i] = lines[i].replace(/;/g, "; coderunner.afterstmt(%VisualizerParameters%, %HighlightLine%);")  if canaddafterstatements(lines[i])
-      i+=1
+      i++
     lines.join "\n"
   
   @setcode = (code) ->

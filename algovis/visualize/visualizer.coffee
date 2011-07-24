@@ -18,14 +18,15 @@ genrandomlist = (len, max) ->
     i++
   ret
 deepCompare = (obj1, obj2) ->
-  return false  unless not isvalid(obj1) == not isvalid(obj2)
-  return true  unless isvalid(obj1)
+  return false  unless obj1? == obj2?
+  return true  if not obj1?
+
   isarr1 = isArray(obj1)
   isarr2 = isArray(obj2)
   isobj1 = isObject(obj1)
   isobj2 = isObject(obj2)
-  return false  unless isarr1 == isarr2
-  return false  unless isobj1 == isobj2
+  return false  if isarr1 != isarr2
+  return false  if isobj1 != isobj2
   if isarr1 and isarr2 and obj1.length != obj2.length
     false
   else if isarr1
@@ -43,8 +44,7 @@ deepCompare = (obj1, obj2) ->
   else
     obj1 == obj2
 valueOrDefault = (val, def) ->
-  return val  if isvalid(val)
-  def
+  return val ? def
 window.valueOrDefault = valueOrDefault
 window.highlightcolors = [ "rgb(255,50,50)", "rgb(50,255,50)", "rgb(50,50,255)" ]
 visualizer_bars = ->
@@ -97,7 +97,7 @@ visualizer_bars = ->
   
   @render = ->
     values = @currentvalues
-    if isvalid(values) and isvalid(values.visarray) and values.visarray.length > 0
+    if values?.visarray?.length > 0
       
     else
       console.log "undefinedrender"
@@ -175,7 +175,7 @@ visualizer_graph = ->
       else if command == "highlightedge"
         @visedge = @visedge.concat(param.split("-"))
       else @visvertex = @visvertex.concat(param.split("-"))  if command == "highlightvertex"
-    throw "Need vis-adjmatrix!"  unless isvalid(@visadjmatrix)
+    throw "Need vis-adjmatrix!"  if not @visadjmatrix?
     assert @visadjmatrix
   
   @getinitstmt = ->
@@ -223,7 +223,7 @@ visualizer_graph = ->
   
   @render = ->
     values = @currentvalues
-    if isvalid(values) and values.hasOwnProperty("visadjmatrix") and isvalid(values.visadjmatrix) and values.visadjmatrix.length > 0
+    if values?['visadjmatrix']?.length? > 0
       
     else
       console.log "undefinedrender"
