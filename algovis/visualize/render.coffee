@@ -1,5 +1,5 @@
-@renderer = new ->
-	@render_bars = (context, w, h, visarray, hlindices, hlranges, extrabars) ->
+class renderer_class
+	render_bars: (context, w, h, visarray, hlindices, hlranges, extrabars) ->
 		l = visarray
 		highlightindex = hlindices ? []
 		highlightindexrange = hlranges ? []
@@ -64,7 +64,7 @@
 			context.textBaseline = "top"
 			context.fillText name, m, h - 25
 	
-	@render_graph = (context, w, h, positions, adjmatrix) ->
+	render_graph: (context, w, h, positions, adjmatrix) ->
 		console.log "render_graph"
 		if positions.length == 0
 			while positions.length > 0
@@ -102,5 +102,6 @@
 			i++
 		context.stroke()
 		positions
-	this
+
+@renderer = new renderer_class
 
