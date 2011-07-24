@@ -43,10 +43,7 @@ deepCompare = (obj1, obj2) ->
 		true
 	else
 		obj1 == obj2
-valueOrDefault = (val, def) ->
-	return val ? def
-window.valueOrDefault = valueOrDefault
-window.highlightcolors = [ "rgb(255,50,50)", "rgb(50,255,50)", "rgb(50,50,255)" ]
+@highlightcolors = [ "rgb(255,50,50)", "rgb(50,255,50)", "rgb(50,50,255)" ]
 visualizer_bars = ->
 	@setup = (canvas, rect, settings) ->
 		@canvas = canvas
@@ -105,7 +102,7 @@ visualizer_bars = ->
 		context = @canvas[0].getContext("2d")
 		w = @canvas.width()
 		h = @canvas.height()
-		extrabars = valueOrDefault(values.extrabars, [])
+		extrabars = values.extrabars ? []
 		while extrabars.length < @visextrabars.length
 			extrabars.push [ "", -1 ]
 		renderer.render_bars context, w, h, values.visarray, values.indexes, values.indexranges, extrabars
@@ -334,5 +331,4 @@ visualizerclass = ->
 		@createvis curvis, curcoms  if curvis?
 	this
 
-visualizer = new visualizerclass()
-window.visualizer = visualizer
+@visualizer = new visualizerclass()

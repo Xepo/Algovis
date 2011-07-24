@@ -14,42 +14,42 @@ comparearray = (ar1, ar2) ->
 		return false  unless ar1[i] == ar2[i]
 		i++
 	true
-window.assert = assert
+@assert = assert
 toline = 0
 newcode = ""
 genlist_amttogenerate = 50
 genlist_maxvalue = 50
-coderunnerclass = ->
-	canaddsurroundstatements = (line) ->
-		canaddafterstatements(line) and line.indexOf("{") == -1 and line.indexOf("}") == -1 and line.search(/return/) == -1 and line.search(/;/) != -1 and line.search(/do/) == -1
-	canaddbraces = (line) ->
-		canaddsurroundstatements(line) and line.indexOf("var") == -1
-	canaddafterstatements = (line) ->
-		line.search(/for *\(/) == -1 and (line.search(/\{/) != -1 or line.search(/function/) == -1)
-	normalizecode = (code) ->
-		braceregex = /(\s|\n)*\{/g
-		codestr = code
-		codestr = codestr.replace(braceregex, "{")
-		ifstmt = /^\s*if[^{]*$/g
-		elsestmt = /^\s*else[^{]*$/g
-		codestr = "function(sortinglist) {" + code + "; }"
-		codestr = eval("(" + codestr + ")")
-		codestr = codestr.toString()
-		codestr = codestr.replace(braceregex, "{")
-		ifmatches = codestr.match(ifstmt)
-		elsematches = codestr.match(elsestmt)
-		if ifmatches? or elsematches?
-			s = ""
-			if ifmatches?
-				for own i of ifmatches
-					s += "\n" + ifmatches[i]
-			if elsematches?
-				for own i of elsematches
-					s += "\n" + elsematches[i]
-			alert "If and else statements must have braces around them.\n" + s
-			throw "Must have braces around if and else statements!"
-		codestr
-	@setup = (codeview, speedslider, gobutton, stopbutton, prevbutton, nextbutton, canvas) ->
+canaddsurroundstatements = (line) ->
+	canaddafterstatements(line) and line.indexOf("{") == -1 and line.indexOf("}") == -1 and line.search(/return/) == -1 and line.search(/;/) != -1 and line.search(/do/) == -1
+canaddbraces = (line) ->
+	canaddsurroundstatements(line) and line.indexOf("var") == -1
+canaddafterstatements = (line) ->
+	line.search(/for *\(/) == -1 and (line.search(/\{/) != -1 or line.search(/function/) == -1)
+normalizecode = (code) ->
+	braceregex = /(\s|\n)*\{/g
+	codestr = code
+	codestr = codestr.replace(braceregex, "{")
+	ifstmt = /^\s*if[^{]*$/g
+	elsestmt = /^\s*else[^{]*$/g
+	codestr = "function(sortinglist) {" + code + "; }"
+	codestr = eval("(" + codestr + ")")
+	codestr = codestr.toString()
+	codestr = codestr.replace(braceregex, "{")
+	ifmatches = codestr.match(ifstmt)
+	elsematches = codestr.match(elsestmt)
+	if ifmatches? or elsematches?
+		s = ""
+		if ifmatches?
+			for own i of ifmatches
+				s += "\n" + ifmatches[i]
+		if elsematches?
+			for own i of elsematches
+				s += "\n" + elsematches[i]
+		alert "If and else statements must have braces around them.\n" + s
+		throw "Must have braces around if and else statements!"
+	codestr
+class coderunner_class
+	setup: (codeview, speedslider, gobutton, stopbutton, prevbutton, nextbutton, canvas) ->
 		@codeview = codeview
 		@codeview.linedtextarea()
 		@speedslider = speedslider
@@ -94,7 +94,7 @@ coderunnerclass = ->
 		@inputvalue = null
 		visualizer.setup canvas
 	
-	@enablecodeview = (b) ->
+	enablecodeview: (b) ->
 		if b
 			@codeview.removeAttr "disabled"
 			@codeview.removeClass "codeviewdisabled"
@@ -102,7 +102,7 @@ coderunnerclass = ->
 			@codeview.attr "disabled", "disabled"
 			@codeview.addClass "codeviewdisabled"
 	
-	@updatecodeview = ->
+	updatecodeview: ->
 		if @showcoderunner and @showcoderunner.attr("checked")
 			@setcode @codeview.val()  if not @wasshowingrunner and @code != @codeview.val()
 			@codeview.val @newcode
@@ -124,7 +124,7 @@ coderunnerclass = ->
 		else
 			@gobutton.attr "value", "Go"
 	
-	@updatespeed = ->
+	updatespeed: ->
 		delay = @getdelay()
 		return  if @lastdelay == delay
 		@lastdelay = delay
@@ -143,7 +143,7 @@ coderunnerclass = ->
 		@timer.set time: timerdelay
 		console.log "Set delay to " + delay + ", timerdelay to " + timerdelay + ", runstep to " + @runstep + ", fastforward: " + @fastforward
 	
-	@getdelay = ->
+	getdelay: ->
 		curspeed = @speedslider.slider("value")
 		if curspeed > 100
 			-(curspeed - 100)
@@ -152,17 +152,17 @@ coderunnerclass = ->
 		else
 			1000 - Math.sqrt(Math.sqrt(curspeed)) * 312
 	
-	@getdepth = ->
+	getdepth: ->
 		i = 0
 		c = @getdepth.caller
 		while c
 			i++
 			c = c.caller
 	
-	@beforeline = (highlightline) ->
+	beforeline: (highlightline) ->
 		@stack.push highlightline
 	
-	@afterstmt = (visvalues, highlightline) ->
+	afterstmt: (visvalues, highlightline) ->
 		@highlightline = highlightline
 		needup = visualizer.needupdate(visvalues)
 		visualizer.afterstmt visvalues
@@ -174,10 +174,10 @@ coderunnerclass = ->
 		return false  if @fastforward or @ranlines < @ranlinesmax
 		throw "coderunner_pause"
 	
-	@afterline = (highlightline) ->
+	afterline: (highlightline) ->
 		@stack.pop()
 	
-	@doeval = ->
+	doeval: ->
 		_TopCodeRunNext_ = 0
 		whoafinished = false
 		try
@@ -194,7 +194,7 @@ coderunnerclass = ->
 				whoafinished = true
 		whoafinished
 	
-	@nextstep = (amt) ->
+	nextstep: (amt) ->
 		visualizer.nextstep()
 		return  if @state != "playing" and @state != "paused"
 		unless visualizer.isready()
@@ -239,7 +239,7 @@ coderunnerclass = ->
 			console.log "finished"
 			@stoprun()
 	
-	@startrun = ->
+	startrun: ->
 		@timer.stop()
 		@record = []
 		@ranlinesmax = 0
@@ -247,14 +247,14 @@ coderunnerclass = ->
 		@startedtime = (new Date).getTime()
 		@unpauserun()
 	
-	@restartrun = ->
+	restartrun: ->
 		@stoprun()
 		@startrun()
 	
-	@skiptoendofrun = ->
+	skiptoendofrun: ->
 		@fastforward = true
 	
-	@gobuttonclick = ->
+	gobuttonclick: ->
 		if @state == "stopped"
 			@inputvalue = null
 			@startrun()
@@ -262,7 +262,7 @@ coderunnerclass = ->
 			@pauserun()
 		else @unpauserun()  if @state == "paused"
 	
-	@unpauserun = ->
+	unpauserun: ->
 		@timer = $.timer(
 			action: =>
 				this.nextstep()
@@ -273,12 +273,12 @@ coderunnerclass = ->
 		@updatecodeview()
 		@timer.play()
 	
-	@pauserun = ->
+	pauserun: ->
 		@state = "paused"
 		@timer.stop()
 		@updatecodeview()
 	
-	@stoprun = ->
+	stoprun: ->
 		@pauserun()
 		@state = "stopped"
 		@ranlinesmax = 0
@@ -286,7 +286,7 @@ coderunnerclass = ->
 		console.log "Time of run: " + (@stoppedtime - @startedtime)
 		@updatecodeview()
 	
-	@updatehighlightlines = (code) ->
+	updatehighlightlines: (code) ->
 		lines = code.split("\n")
 		i = 0
 		while i < lines.length
@@ -300,7 +300,7 @@ coderunnerclass = ->
 		newcode = newcode.replace(/%VisualizerParameters%/g, visualizer.getvaluesasparameter())
 		newcode
 	
-	@addafterstmts = (code) ->
+	addafterstmts: (code) ->
 		lines = code.split("\n")
 		i = 0
 		while i < lines.length
@@ -308,7 +308,7 @@ coderunnerclass = ->
 			i++
 		lines.join "\n"
 	
-	@setcode = (code) ->
+	setcode: (code) ->
 		@code = code
 		code += ";"
 		visualizer.setcode code
@@ -322,7 +322,5 @@ coderunnerclass = ->
 		@updatecodeview()
 		@testcodedata.text @newcode
 		@newcodef = eval("(" + @newcode + ")")
-	this
 
-coderunner = new coderunnerclass()
-window.coderunner = coderunner
+@coderunner = new coderunner_class()

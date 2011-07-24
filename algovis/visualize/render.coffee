@@ -1,9 +1,9 @@
-window.renderer = new ->
+@renderer = new ->
 	@render_bars = (context, w, h, visarray, hlindices, hlranges, extrabars) ->
 		l = visarray
-		highlightindex = valueOrDefault(hlindices, [])
-		highlightindexrange = valueOrDefault(hlranges, [])
-		extrabars = valueOrDefault(extrabars, [])
+		highlightindex = hlindices ? []
+		highlightindexrange = hlranges ? []
+		extrabars = extrabars ? []
 		barh = h - 50
 		totalbars = l.length
 		left = 20
