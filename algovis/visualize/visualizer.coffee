@@ -45,9 +45,45 @@ deepCompare = (obj1, obj2) ->
 		obj1 == obj2
 @highlightcolors = [ "rgb(255,50,50)", "rgb(50,255,50)", "rgb(50,50,255)" ]
 class visualizer_bars
+	reset: ->
+		@currentvalues = visarray: []
+	
+	resetsettings: ->
+		@visarray = null
+		@visindex = []
+		@visindexranges = []
+		@visextrabars = []
+		@reset()
+
+	setsettings: (settings) ->
+		@resetsettings()
+		commands = settings
+		for i of commands
+			command = commands[i][0]
+			param = commands[i][1]
+			if command == "array"
+				@visarray = param
+			else if command == "index"
+				@visindex = @visindex.concat(param.split(","))
+			else if command == "indexrange"
+				params = param.split(" ")
+				irange = Object()
+				irange.name = params[0]
+				irange.lowrange = params[1]
+				irange.highrange = params[2]
+				@visindexranges.push irange
+			else if command == "extrabar"
+				params = param.split(" ")
+				ibar = Object()
+				ibar.name = params[0]
+				ibar.value = params[1]
+				@visextrabars.push ibar
+		assert @visarray
+
 	setup: (canvas, rect, settings) ->
 		@canvas = canvas
 		@canvasrect = rect
+		@resetsettings
 		@setsettings settings
 	
 	isready: ->
@@ -83,14 +119,13 @@ class visualizer_bars
 	
 	generateinput: ->
 		console.log "Generating input"
-		genrandomlist 25, 25
+		return genrandomlist 25, 25
 	
 	needupdate: (values) ->
-		ret = not deepCompare(@currentvalues, values)
-		ret
+		return not deepCompare(@currentvalues, values)
 	
 	afterstmt: (values) ->
-		@currentvalues = owl.deepCopy(values)  if values and values.hasOwnProperty("visarray") and values.visarray
+		@currentvalues = owl.deepCopy(values)  if values?.visarray?
 	
 	render: ->
 		values = @currentvalues
@@ -107,40 +142,7 @@ class visualizer_bars
 			extrabars.push [ "", -1 ]
 		renderer.render_bars context, w, h, values.visarray, values.indexes, values.indexranges, extrabars
 	
-	reset: ->
-		@currentvalues = visarray: []
 	
-	resetsettings: ->
-		@visarray = null
-		@visindex = []
-		@visindexranges = []
-		@visextrabars = []
-		@reset()
-	
-	setsettings: (settings) ->
-		@resetsettings()
-		commands = settings
-		for i of commands
-			command = commands[i][0]
-			param = commands[i][1]
-			if command == "array"
-				@visarray = param
-			else if command == "index"
-				@visindex = @visindex.concat(param.split(","))
-			else if command == "indexrange"
-				params = param.split(" ")
-				irange = Object()
-				irange.name = params[0]
-				irange.lowrange = params[1]
-				irange.highrange = params[2]
-				@visindexranges.push irange
-			else if command == "extrabar"
-				params = param.split(" ")
-				ibar = Object()
-				ibar.name = params[0]
-				ibar.value = params[1]
-				@visextrabars.push ibar
-		assert @visarray
 
 class visualizer_graph
 	setup: (canvas, rect, settings) ->
@@ -197,14 +199,9 @@ class visualizer_graph
 		line = []
 		i = 0
 		
-		while i < size
-			line.push 0
-			i++
-		i = 0
+		line = [0 for i in [0...size]]
 		
-		while i < size
-			ret.push owl.deepCopy(line)
-			i++
+		ret = [owl.deepCopy(line) for i in [0...size]]
 		i = 0
 		
 		while i < size * size / 2
@@ -302,11 +299,10 @@ class visualizer_class
 			throw "No such vistype:" + vistype
 	
 	isready: ->
-		bGood = 0
+		return false unless @visualizers.length > 0
 		for v of @visualizers
 			return false  unless @visualizers[v].isready()
-			bGood = 1
-		bGood
+		return true
 	
 	setcode: (code) ->
 		console.log "vis: Setting code"

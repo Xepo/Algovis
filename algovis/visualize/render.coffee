@@ -32,7 +32,7 @@ class renderer_class
 		i = 0
 		
 		while i < extrabars.length
-			continue  if not extrabars?[i]? or not extrabars?[i]?[0]? or not extrabars?[i]?[1]? or extrabars?[i]?[1]? == -1
+			continue if extrabars?[i]?[0]? or not extrabars?[i]?[1]? or extrabars?[i]?[1]? == -1
 			name = extrabars[i][0]
 			val = extrabars[i][1]
 			context.fillStyle = "rgb(125,125,125)"
@@ -47,8 +47,7 @@ class renderer_class
 			name = highlightindexrange[i][0]
 			low = highlightindexrange[i][1]
 			high = highlightindexrange[i][2]
-			continue  if not name? or not low? or not high?
-			continue  if low > high
+			continue  if not name? or not low? or not high? or low > high
 			l = left + low * barw
 			r = left + high * barw + barw
 			m = (l + r) / 2
