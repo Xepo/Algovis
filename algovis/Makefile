@@ -1,9 +1,9 @@
-JSFILES=visualize/coderunner.js visualize/visualizer.js visualize/render.js visualize/test.js
+JSFILES=generated/coderunner.js generated/visualizer.js generated/render.js generated/test.js
 COFFEEBIN=../coffee
 FLAGS=-c
 
 Default: $(JSFILES)
 
-%.js: %.coffee
-	$(COFFEEBIN) $(FLAGS) $< 2>&1 | sed -e "s@^@$<:@" 2>&1
+generated/%.js: coffee/%.coffee
+	$(COFFEEBIN) $(FLAGS) $< -o generated 2>&1 | sed -e "s@^@$<:@" 2>&1
 

@@ -5,7 +5,10 @@ api_version: 1
 
 handlers:
 - url: /static
-  static_dir: visualize
+  static_dir: static
+
+- url: /generated
+  static_dir: generated
 
 - url: .*
   script: main.py
