@@ -10,6 +10,9 @@ handlers:
 - url: /generated
   static_dir: generated
 
+- url: /lib
+  static_dir: lib
+
 - url: .*
   script: main.py
 
