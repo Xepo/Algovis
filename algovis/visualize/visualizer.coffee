@@ -44,16 +44,16 @@ deepCompare = (obj1, obj2) ->
 	else
 		obj1 == obj2
 @highlightcolors = [ "rgb(255,50,50)", "rgb(50,255,50)", "rgb(50,50,255)" ]
-visualizer_bars = ->
-	@setup = (canvas, rect, settings) ->
+class visualizer_bars
+	setup: (canvas, rect, settings) ->
 		@canvas = canvas
 		@canvasrect = rect
 		@setsettings settings
 	
-	@isready = ->
+	isready: ->
 		true
 	
-	@getinitstmt = ->
+	getinitstmt: ->
 		retvars = @visarray
 		retvars += "," + @visindex.join(",")
 		for i of @visindexranges
@@ -64,7 +64,7 @@ visualizer_bars = ->
 		vars = retvars.match(/[a-zA-Z][a-zA-Z0-9]*(?!\()/g)
 		"var " + vars.join("=null,") + "=null;"
 	
-	@getvaluesasparameter = ->
+	getvaluesasparameter: ->
 		ret = "{'visarray': " + @visarray
 		ret += ", 'indexes': [" + @visindex.join(",") + "]"  if @visindex.length > 0
 		if @visindexranges.length > 0
@@ -81,18 +81,18 @@ visualizer_bars = ->
 			ret += ", 'extrabars': [" + ibar.join(",") + "]"
 		ret + "}"
 	
-	@generateinput = ->
+	generateinput: ->
 		console.log "Generating input"
 		genrandomlist 25, 25
 	
-	@needupdate = (values) ->
+	needupdate: (values) ->
 		ret = not deepCompare(@currentvalues, values)
 		ret
 	
-	@afterstmt = (values) ->
+	afterstmt: (values) ->
 		@currentvalues = owl.deepCopy(values)  if values and values.hasOwnProperty("visarray") and values.visarray
 	
-	@render = ->
+	render: ->
 		values = @currentvalues
 		if values?.visarray?.length > 0
 			
@@ -107,17 +107,17 @@ visualizer_bars = ->
 			extrabars.push [ "", -1 ]
 		renderer.render_bars context, w, h, values.visarray, values.indexes, values.indexranges, extrabars
 	
-	@reset = ->
+	reset: ->
 		@currentvalues = visarray: []
 	
-	@resetsettings = ->
+	resetsettings: ->
 		@visarray = null
 		@visindex = []
 		@visindexranges = []
 		@visextrabars = []
 		@reset()
 	
-	@setsettings = (settings) ->
+	setsettings: (settings) ->
 		@resetsettings()
 		commands = settings
 		for i of commands
@@ -141,27 +141,26 @@ visualizer_bars = ->
 				ibar.value = params[1]
 				@visextrabars.push ibar
 		assert @visarray
-	this
 
-visualizer_graph = ->
-	@setup = (canvas, rect, settings) ->
+class visualizer_graph
+	setup: (canvas, rect, settings) ->
 		@canvas = canvas
 		@canvasrect = rect
 		@setsettings settings
 	
-	@isready = ->
+	isready: ->
 		true
 	
-	@reset = ->
+	reset: ->
 		@currentvalues = visarray: []
 	
-	@resetsettings = ->
+	resetsettings: ->
 		@visadjmatrix = null
 		@visedge = []
 		@visvertex = []
 		@reset()
 	
-	@setsettings = (settings) ->
+	setsettings: (settings) ->
 		@resetsettings()
 		commands = settings
 		for i of commands
@@ -175,23 +174,23 @@ visualizer_graph = ->
 		throw "Need vis-adjmatrix!"  if not @visadjmatrix?
 		assert @visadjmatrix
 	
-	@getinitstmt = ->
+	getinitstmt: ->
 		retvars = @visadjmatrix
 		vars = retvars.match(/[a-zA-Z][a-zA-Z0-9]*(?!\()/g)
 		"var " + vars.join("=null,") + "=null;"
 	
-	@getvaluesasparameter = ->
+	getvaluesasparameter: ->
 		ret = "{'visadjmatrix': " + @visadjmatrix
 		ret + "}"
 	
-	@needupdate = (values) ->
+	needupdate: (values) ->
 		ret = not deepCompare(@currentvalues, values)
 		ret
 	
-	@afterstmt = (values) ->
+	afterstmt: (values) ->
 		@currentvalues = owl.deepCopy(values)  if values and values.hasOwnProperty("visadjmatrix") and values.visadjmatrix
 	
-	@generateinput = ->
+	generateinput: ->
 		console.log "Generating matrix"
 		size = 4
 		ret = [ [] ]
@@ -218,7 +217,7 @@ visualizer_graph = ->
 		@positions = []
 		ret
 	
-	@render = ->
+	render: ->
 		values = @currentvalues
 		if values?['visadjmatrix']?.length? > 0
 			
@@ -229,49 +228,48 @@ visualizer_graph = ->
 		w = @canvas.width()
 		h = @canvas.height()
 		@positions = renderer.render_graph(context, w, h, @positions, values.visadjmatrix)
-	this
 
-visualizerclass = ->
-	@setup = (canvas) ->
+class visualizer_class
+	setup: (canvas) ->
 		@canvas = canvas
 		@resetcode()
 	
-	@getinitstmt = ->
+	getinitstmt: ->
 		initstmts = []
 		for i of @visualizers
 			initstmts.push @visualizers[i].getinitstmt()
 		initstmts.join ";"
 	
-	@getvaluesasparameter = ->
+	getvaluesasparameter: ->
 		valparams = []
 		for i of @visualizers
 			valparams.push @visualizers[i].getvaluesasparameter()
 		"[" + valparams.join(",") + "]"
 	
-	@generateinput = ->
+	generateinput: ->
 		@visualizers[0].generateinput()
 	
-	@clearcanvas = ->
+	clearcanvas: ->
 		@canvas[0].width = @canvas[0].width
 	
-	@nextstep = ->
+	nextstep: ->
 		@clearcanvas()
 	
-	@needupdate = (values) ->
+	needupdate: (values) ->
 		for i of @visualizers
 			return true  if @visualizers[i].needupdate(values[i])
 		false
 	
-	@afterstmt = (values) ->
+	afterstmt: (values) ->
 		for i of @visualizers
 			@visualizers[i].afterstmt values[i]
 	
-	@render = ->
+	render: ->
 		@clearcanvas()
 		for i of @visualizers
 			@visualizers[i].render()
 	
-	@findcommands = (code) ->
+	findcommands: (code) ->
 		mycode = code
 		visreg = /!vis-([a-zA-Z0-9]+): *([^;]*);/g
 		matches = code.match(visreg)
@@ -284,14 +282,14 @@ visualizerclass = ->
 		console.log commands
 		commands
 	
-	@reset = ->
+	reset: ->
 		for i of @visualizers
 			@visualizers[i].reset()
 	
-	@resetcode = ->
+	resetcode: ->
 		@visualizers = []
 	
-	@createvis = (vistype, viscommands) ->
+	createvis: (vistype, viscommands) ->
 		if vistype == "bar"
 			newvis = new visualizer_bars()
 			newvis.setup @canvas, [], viscommands
@@ -303,14 +301,14 @@ visualizerclass = ->
 		else
 			throw "No such vistype:" + vistype
 	
-	@isready = ->
+	isready: ->
 		bGood = 0
 		for v of @visualizers
 			return false  unless @visualizers[v].isready()
 			bGood = 1
 		bGood
 	
-	@setcode = (code) ->
+	setcode: (code) ->
 		console.log "vis: Setting code"
 		@resetcode()
 		commands = @findcommands(code)
@@ -329,6 +327,5 @@ visualizerclass = ->
 				throw "Must set vis-type before anything else!"  unless curvis?
 				curcoms.push commands[i]
 		@createvis curvis, curcoms  if curvis?
-	this
 
-@visualizer = new visualizerclass()
+@visualizer = new visualizer_class()
