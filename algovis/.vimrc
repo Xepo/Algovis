@@ -7,3 +7,8 @@
 set errorformat=%f:Error:%m\ on\ line\ %l,
 				    \%f:Error:\ %s\ on\ line\ %l%m
 
+:set foldcolumn=2 fdn=1 
+:highlight FoldColumn gui=bold guibg=NONE guifg=green
+:highlight Folded gui=NONE guibg=NONE guifg=white
+
+
