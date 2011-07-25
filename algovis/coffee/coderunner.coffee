@@ -19,59 +19,27 @@ toline = 0
 newcode = ""
 genlist_amttogenerate = 50
 genlist_maxvalue = 50
-canaddsurroundstatements = (line) ->
-	canaddafterstatements(line) and line.indexOf("{") == -1 and line.indexOf("}") == -1 and line.search(/return/) == -1 and line.search(/;/) != -1 and line.search(/do/) == -1
-canaddbraces = (line) ->
-	canaddsurroundstatements(line) and line.indexOf("var") == -1
-canaddafterstatements = (line) ->
-	line.search(/for *\(/) == -1 and (line.search(/\{/) != -1 or line.search(/function/) == -1)
-normalizecode = (code) ->
-	braceregex = /(\s|\n)*\{/g
-	codestr = code
-	codestr = codestr.replace(braceregex, "{")
-	ifstmt = /^\s*if[^{]*$/g
-	elsestmt = /^\s*else[^{]*$/g
-	codestr = "function(sortinglist) {" + code + "; }"
-	codestr = eval("(" + codestr + ")")
-	codestr = codestr.toString()
-	codestr = codestr.replace(braceregex, "{")
-	ifmatches = codestr.match(ifstmt)
-	elsematches = codestr.match(elsestmt)
-	if ifmatches? or elsematches?
-		s = ""
-		if ifmatches?
-			for own i of ifmatches
-				s += "\n" + ifmatches[i]
-		if elsematches?
-			for own i of elsematches
-				s += "\n" + elsematches[i]
-		alert "If and else statements must have braces around them.\n" + s
-		throw "Must have braces around if and else statements!"
-	codestr
 class coderunner_class
-	setup: (codeview, speedslider, gobutton, stopbutton, prevbutton, nextbutton, canvas) ->
-		@codeview = codeview
+	setup: (@codeview, @speedslider, @gobutton, @stopbutton, @prevbutton, @nextbutton, @canvas) ->
+		@showerror()
+
 		@codeview.linedtextarea()
-		@speedslider = speedslider
+
 		@speedslider.slider
 			value: 100
 			max: 201
 			slide: (event, ui) =>
 				this.updatespeed()
 		
-		@gobutton = gobutton
 		@gobutton.bind "click", =>
 			this.gobuttonclick()
 		
-		@stopbutton = stopbutton
 		@stopbutton.bind "click", =>
 			this.stoprun()
 		
-		@prevbutton = prevbutton
 		@prevbutton.bind "click", =>
 			this.nextstep -1
 		
-		@nextbutton = nextbutton
 		@nextbutton.bind "click", =>
 			this.nextstep 1
 		
@@ -186,14 +154,24 @@ class coderunner_class
 		catch er
 			whoafinished = false
 			unless er == "coderunner_pause"
-				exer = "Got exception: " + er + "\n"
+				exer = "Exception on line #{@highlightline}: \n#{er}\n"
 				exer += "\nStack trace: \n"  if @stack.length > 1
 				for own v of @stack
-					exer += "Line " + v + "\n"
+					exer += "\tLine " + v + "\n"
 				alert exer
 				whoafinished = true
 		whoafinished
 	
+	showerror: (msg) ->
+		if msg?
+			$('#errorparent').show()
+			$('#errorparent').empty()
+			$('#errorparent').append "<span class='error'>#{msg}</span>"
+		else
+			$('#errorparent').empty()
+			$('.errorparent').hide()
+
+
 	nextstep: (amt) ->
 		visualizer.nextstep()
 		return  if @state != "playing" and @state != "paused"
@@ -258,7 +236,10 @@ class coderunner_class
 	gobuttonclick: ->
 		if @state == "stopped"
 			@inputvalue = null
-			@startrun()
+			try
+				@startrun()
+			catch error
+				console.log "Couldn't Go"
 		else if @state == "playing"
 			@pauserun()
 		else @unpauserun()  if @state == "paused"
@@ -286,34 +267,9 @@ class coderunner_class
 		@stoppedtime = (new Date).getTime()
 		console.log "Time of run: " + (@stoppedtime - @startedtime)
 		@updatecodeview()
-	
-	updatehighlightlines: (code) ->
-		lines = code.split("\n")
-		i = 0
-		while i < lines.length
-			lineno = (i + 1).toString()
-			if canaddsurroundstatements(lines[i])
-				lines[i] = "coderunner.beforeline(%HighlightLine%); " + lines[i] + ";coderunner.afterline(%HighlightLine%);"
-				lines[i] = "{" + lines[i] + "}"  if canaddbraces(lines[i])
-			lines[i] = lines[i].replace(/%HighlightLine%/g, lineno)
-			i++
-		newcode = lines.join("\n")
-		newcode = newcode.replace(/%VisualizerParameters%/g, visualizer.getvaluesasparameter())
-		newcode
-	
-	addafterstmts: (code) ->
-		lines = code.split("\n")
-		i = 0
-		while i < lines.length
-			lines[i] = lines[i].replace(/;/g, "; coderunner.afterstmt(%VisualizerParameters%, %HighlightLine%);")  if canaddafterstatements(lines[i])
-			i++
-		lines.join "\n"
-	
-
-
-
 
 	setcode: (@code) ->
+		@showerror()
 		visualizer.setcode @code
 		@codeview.val @code
 
@@ -323,7 +279,16 @@ class coderunner_class
 		coffeecode = lines.join '\n'
 		console.log coffeecode
 		
-		jscode = CoffeeScript.compile(coffeecode, {'hook': 'coderunner.coffee_hook'})
+		try
+			CoffeeScript.compile(@code)
+		catch error
+			@showerror error
+			throw error
+
+		try
+			jscode = CoffeeScript.compile(coffeecode, {'hook': 'coderunner.coffee_hook'})
+		catch error
+			alert "Internal Error!  Contact algovis developer.\n#{error}"
 		lineno = -1
 		visparam = visualizer.getvaluesasparameter()
 		lines = for line in jscode.split("\n")

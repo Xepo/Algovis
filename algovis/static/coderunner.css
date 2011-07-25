@@ -1,4 +1,7 @@
 
+.error {
+	border: 1px solid red;
+}
 .codeviewdisabled {
 	background-color: #DDDDDD;
 	color: #000000;
