@@ -4,9 +4,22 @@
 <%inherit file='base.html'/>
 
 <%block name='header'>
-	<script type="text/javascript" src="static/jquery.js"></script> 
+	<script type="text/javascript" src="lib/jquery.js"></script> 
 	<script type='text/javascript'>
 		var coderunner = new function() {
+			this.coffee_hook = function(lineno, vals, eventdesc, expression) {
+				texttoadd = '';
+				for(var i in vals)
+				{
+					for(var j in vals[i])
+					{
+						texttoadd += " " + j + ':' + vals[i][j];
+					}
+				}
+				$('#logtable').append("<tr><td>" + lineno + "</td><td>" + texttoadd + "</td></div>"); 
+				return expression;
+			}
+
 			this.afterstmt = function(vals, lineno) {
 				texttoadd = '';
 				for(var i in vals)

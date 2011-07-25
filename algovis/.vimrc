@@ -1,8 +1,9 @@
 :set previewheight=3
-:map <F4> :cn
+:map <F4> :cn<CR>
 :map <F5> :silent !c:\pp\algovis\algovis\compile.bat<CR>:cfile c:\temp\makeoutput.txt<CR>
 :cd c:\pp\algovis\algovis
 :set path+=./coffee/*.coffee,*.bat,*.py,*.yaml,./coffee/*.coffee,./Templates/*.html,./static/*.css
+:set shiftwidth=5
 
 set errorformat=%f:Error:%m\ on\ line\ %l,
 				    \%f:Error:\ %s\ on\ line\ %l%m

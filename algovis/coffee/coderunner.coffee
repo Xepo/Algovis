@@ -221,8 +221,9 @@ class coderunner_class
 			@ranlinesmax = prevranlinesmax
 			@ranlinesmax = @record.length - 1  if @ranlinesmax >= @record.length
 			rec = @record[@ranlinesmax]
-			@stack = owl.deepCopy(rec[0])
-			visualizer.afterstmt owl.deepCopy(rec[1])
+			if rec?
+				@stack = owl.deepCopy(rec[0])
+				visualizer.afterstmt owl.deepCopy(rec[1])
 			console.log "Now rec'd: " + @record.length
 			console.log "Ranlinesmax:" + @ranlinesmax
 			if rlength == @record.length
@@ -308,19 +309,49 @@ class coderunner_class
 			i++
 		lines.join "\n"
 	
-	setcode: (code) ->
-		@code = code
-		code += ";"
-		visualizer.setcode code
-		@code = normalizecode(code)
-		console.log "Normalized code: " + @code
-		@codeview.text @code
-		@newcode = @code
-		@newcode = @addafterstmts(@newcode)
-		@newcode = "function(sortinglist) { " + visualizer.getinitstmt() + "cr_newf = " + @newcode + "; cr_newf(sortinglist); return 'finished'; }"
-		@newcode = @updatehighlightlines(@newcode)
+
+
+
+
+	setcode: (@code) ->
+		visualizer.setcode @code
+		@codeview.val @code
+
+		lines = for line,lineno in @code.split("\n")
+			   line.replace /^([ \t]*)/g, (g0,g1) -> g1 + "###@@#{lineno+1}@@###"
+
+		coffeecode = lines.join '\n'
+		console.log coffeecode
+		
+		jscode = CoffeeScript.compile(coffeecode, {'hook': 'coderunner.coffee_hook'})
+		lineno = -1
+		visparam = visualizer.getvaluesasparameter()
+		lines = for line in jscode.split("\n")
+			matches = line.match /@@([0-9]*)@@/
+			if matches?
+				lineno = matches[1]
+			line.replace /coderunner.coffee_hook\(/g, (g0) -> g0 + lineno + "," + visparam + ","
+		jscode = lines.join '\n'
+
+		jscode = "function(sortinglist , #{visualizer.getinitstmt()} ) { #{jscode}; return 'finished'; }"
+
+		console.log "deux:" + jscode
+
+		@newcode = jscode
+
 		@updatecodeview()
 		@testcodedata.text @newcode
 		@newcodef = eval("(" + @newcode + ")")
 
+	coffee_hook: (lineno, visvalues, eventtype, expression) ->
+		switch eventtype
+			when "beforeexpression"
+				@beforeline lineno
+				@highlightline = lineno
+			when "beforestatement"
+				@highlightline = lineno
+			when "expression"
+				@afterstmt(visvalues, lineno)
+				@afterline lineno
+		expression
 @coderunner = new coderunner_class()

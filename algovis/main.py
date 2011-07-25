@@ -45,13 +45,16 @@ class IndexHandler(webapp.RequestHandler):
 
 class PreloadHandler(webapp.RequestHandler):
 	def get(self):
+		for storedcosni in CodeSnippet().all():
+			self.response.out.write("Deleting %s<br/>" % (storedcosni.name))
+			storedcosni.delete()
 		defaultdir = os.path.join(os.path.dirname(__file__), 'default_snippets')
-		jsfiles = [fn for fn in os.listdir(defaultdir) if fn.endswith('.js')]
+		jsfiles = [fn for fn in os.listdir(defaultdir) if fn.endswith('.coffee')]
 		for fn in jsfiles:
 			cosni = CodeSnippet()
 
 			cosni.name = os.path.basename(fn)
-			cosni.name = cosni.name[:-3] #Remove .js from name
+			cosni.name = cosni.name[:-7] #Remove .js from name
 			cosni.description = cosni.name
 
 			for storedcosni in CodeSnippet().all().filter('name =', cosni.name):

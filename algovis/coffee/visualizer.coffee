@@ -98,22 +98,23 @@ class visualizer_bars
 			retvars += "," + @visextrabars[i].value
 		retvars += ","
 		vars = retvars.match(/[a-zA-Z][a-zA-Z0-9]*(?!\()/g)
-		"var " + vars.join("=null,") + "=null;"
+		#"var " + vars.join("=null,") + "=null;"
+		"" + vars.join(",") + ""
 	
 	getvaluesasparameter: ->
-		ret = "{'visarray': " + @visarray
-		ret += ", 'indexes': [" + @visindex.join(",") + "]"  if @visindex.length > 0
+		param = (expr) -> "((typeof #{expr} === 'undefined' || #{expr} === null) ? null :  (#{expr}))"
+		ret = "{'visarray': " + param(@visarray)
+		ret += ", 'indexes': [" + [param(ind) for ind in @visindex].join(",") + "]"  if @visindex.length > 0
 		if @visindexranges.length > 0
-			irange = []
-			for j of @visindexranges
+			irange = for j of @visindexranges
 				thisrange = @visindexranges[j]
-				irange.push "['" + thisrange.name + "'," + thisrange.lowrange + "," + thisrange.highrange + "]"
+				irange.push "['" + thisrange.name + "'," + param(thisrange.lowrange) + "," + param(thisrange.highrange) + "]"
 			ret += ", 'indexranges': [" + irange.join(",") + "]"
 		if @visextrabars.length > 0
 			ibar = []
 			for j of @visextrabars
 				thisbar = @visextrabars[j]
-				ibar.push "['" + thisbar.name + "'," + thisbar.value + "]"
+				ibar.push "['" + thisbar.name + "'," + param(thisbar.value) + "]"
 			ret += ", 'extrabars': [" + ibar.join(",") + "]"
 		ret + "}"
 	
