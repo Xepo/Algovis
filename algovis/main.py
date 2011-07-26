@@ -14,7 +14,7 @@ import mako.exceptions
 import new
 
 def getvisurl(cosni):
-	return '/view?id=%s' % (cosni.key())
+	return '/view?name=%s' % (cosni.key().name())
 def getcodeurl(cosni):
 	return '/codeview?id=%s' % (cosni.key())
 def getindexurl():
@@ -51,10 +51,12 @@ class PreloadHandler(webapp.RequestHandler):
 		defaultdir = os.path.join(os.path.dirname(__file__), 'default_snippets')
 		jsfiles = [fn for fn in os.listdir(defaultdir) if fn.endswith('.coffee')]
 		for fn in jsfiles:
-			cosni = CodeSnippet()
+			name = os.path.basename(fn)
+			name = name[:-7]
 
-			cosni.name = os.path.basename(fn)
-			cosni.name = cosni.name[:-7] #Remove .js from name
+			cosni = CodeSnippet(key_name=name)
+
+			cosni.name = name
 			cosni.description = cosni.name
 
 			for storedcosni in CodeSnippet().all().filter('name =', cosni.name):
@@ -69,8 +71,8 @@ class PreloadHandler(webapp.RequestHandler):
 
 class ViewHandler(webapp.RequestHandler):
 	def get(self):
-		id = self.request.get('id')
-		codesnippet = CodeSnippet.get(db.Key(encoded=id))
+		name = self.request.get('name')
+		codesnippet = CodeSnippet.get_by_key_name(name)
 		d = {
 				'codesnippet': codesnippet
 			}
