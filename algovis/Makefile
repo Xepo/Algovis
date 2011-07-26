@@ -1,4 +1,4 @@
-JSFILES=generated/coderunner.js generated/visualizer.js generated/render.js generated/test.js
+JSFILES=generated/coderunner.js generated/visualizer.js generated/render.js generated/test.js generated/codeview.js
 COFFEEBIN=../coffee
 FLAGS=-c
 
