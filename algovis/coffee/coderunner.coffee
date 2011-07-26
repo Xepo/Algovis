@@ -283,6 +283,7 @@ class coderunner_class
 			CoffeeScript.compile(@code)
 		catch error
 			@showerror error
+			@stoprun()
 			throw error
 
 		try
