@@ -46,7 +46,7 @@ class coderunner_class
 		
 		@timer = $.timer()
 		@canvas = canvas
-		@onlypausewhenchanged = true
+		@onlypausewhenchanged = false
 		if $("#showcoderunner")
 			@showcoderunner = $("#showcoderunner")
 			@showcoderunner.attr "checked", false
@@ -139,7 +139,7 @@ class coderunner_class
 		@updatespeed()
 		return false  if @onlypausewhenchanged and not needup
 		@ranlines++
-		@record.push [ owl.deepCopy(@stack), owl.deepCopy(visvalues) ]  if @ranlines > @record.length
+		@record.push [ owl.deepCopy(@stack), @highlightline, owl.deepCopy(visvalues) ]  if @ranlines > @record.length
 		return false  if @fastforward or @ranlines < @ranlinesmax
 		throw "coderunner_pause"
 	
@@ -184,7 +184,8 @@ class coderunner_class
 		@ranlinesmax = @ranlinesmax + amt
 		if @record.length > @ranlinesmax
 			@stack = owl.deepCopy(@record[@ranlinesmax][0])
-			visualizer.afterstmt owl.deepCopy(@record[@ranlinesmax][1])
+			@highlightline = @record[@ranlinesmax][1]
+			visualizer.afterstmt owl.deepCopy(@record[@ranlinesmax][2])
 			finished = false
 		else
 			@inputvalue ?= visualizer.generateinput()
@@ -202,7 +203,8 @@ class coderunner_class
 			rec = @record[@ranlinesmax]
 			if rec?
 				@stack = owl.deepCopy(rec[0])
-				visualizer.afterstmt owl.deepCopy(rec[1])
+				@highlightline = rec[1]
+				visualizer.afterstmt owl.deepCopy(rec[2])
 			console.log "Now rec'd: " + @record.length
 			console.log "Ranlinesmax:" + @ranlinesmax
 			if rlength == @record.length
