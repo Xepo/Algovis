@@ -19,11 +19,35 @@ toline = 0
 newcode = ""
 genlist_amttogenerate = 50
 genlist_maxvalue = 50
+`new function($) {
+  $.fn.setCursorPosition = function(pos) {
+    if ($(this).get(0).setSelectionRange) {
+      $(this).get(0).setSelectionRange(pos, pos);
+    } else if ($(this).get(0).createTextRange) {
+      var range = $(this).get(0).createTextRange();
+      range.collapse(true);
+      range.moveEnd('character', pos);
+      range.moveStart('character', pos);
+      range.select();
+    }
+  }
+}(jQuery);`
+
 class coderunner_class
 	setup: (@codeview, @speedslider, @gobutton, @stopbutton, @prevbutton, @nextbutton, @canvas) ->
 		@showerror()
 
 		@codeview.linedtextarea()
+		@codeview.keyup (event) ->
+			if event.keyCode == 13
+				pos = $(this).caret().start
+				text = $(this).val()
+				lastnewline = text.lastIndexOf "\n", pos-2
+				lastline = text.substr lastnewline+1, pos-lastnewline
+				indent = lastline.match /^[ \t]*/
+				if indent?
+					$(this).val text.substr(0, pos) + indent + text.substr(pos)
+					$(this).setCursorPosition pos + indent[0].length
 
 		@speedslider.slider
 			value: 100
