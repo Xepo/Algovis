@@ -108,7 +108,7 @@ class visualizer_bars
 		if @visindexranges.length > 0
 			irange = for j of @visindexranges
 				thisrange = @visindexranges[j]
-				irange.push "['" + thisrange.name + "'," + param(thisrange.lowrange) + "," + param(thisrange.highrange) + "]"
+				"['" + thisrange.name + "'," + param(thisrange.lowrange) + "," + param(thisrange.highrange) + "]"
 			ret += ", 'indexranges': [" + irange.join(",") + "]"
 		if @visextrabars.length > 0
 			ibar = []

@@ -46,7 +46,7 @@ class coderunner_class
 		
 		@timer = $.timer()
 		@canvas = canvas
-		@onlypausewhenchanged = false
+		@onlypausewhenchanged = true
 		if $("#showcoderunner")
 			@showcoderunner = $("#showcoderunner")
 			@showcoderunner.attr "checked", false
@@ -236,6 +236,7 @@ class coderunner_class
 	skiptoendofrun: ->
 		@fastforward = true
 	
+	#TODO: Count by lines when stepping, count by states when running.
 	gobuttonclick: ->
 		if @state == "stopped"
 			@inputvalue = null
@@ -276,11 +277,7 @@ class coderunner_class
 		visualizer.setcode @code
 		@codeview.val @code
 
-		lines = for line,lineno in @code.split("\n")
-			   line.replace /^([ \t]*)/g, (g0,g1) -> g1 + "###@@#{lineno+1}@@###"
-
-		coffeecode = lines.join '\n'
-		console.log coffeecode
+		@testcodedata.text @code
 		
 		try
 			CoffeeScript.compile(@code)
@@ -289,18 +286,14 @@ class coderunner_class
 			@stoprun()
 			throw error
 
+		console.log @code
 		try
-			jscode = CoffeeScript.compile(coffeecode, {'hook': 'coderunner.coffee_hook'})
+			jscode = CoffeeScript.compile(@code, {'hook': 'coderunner.coffee_hook'})
 		catch error
 			alert "Internal Error!  Contact algovis developer.\n#{error}"
 		lineno = -1
 		visparam = visualizer.getvaluesasparameter()
-		lines = for line in jscode.split("\n")
-			matches = line.match /@@([0-9]*)@@/
-			if matches?
-				lineno = matches[1]
-			line.replace /coderunner.coffee_hook\(/g, (g0) -> g0 + lineno + "," + visparam + ","
-		jscode = lines.join '\n'
+		jscode = jscode.replace /coderunner.coffee_hook\(/g, (g0) -> g0 + visparam + ","
 
 		jscode = "function(sortinglist , #{visualizer.getinitstmt()} ) { #{jscode}; return 'finished'; }"
 
@@ -312,15 +305,16 @@ class coderunner_class
 		@testcodedata.text @newcode
 		@newcodef = eval("(" + @newcode + ")")
 
-	coffee_hook: (lineno, visvalues, eventtype, expression) ->
+	coffee_hook: (visvalues, eventtype, lineno, expression) ->
+		@lastline = lineno if lineno?
 		switch eventtype
 			when "beforeexpression"
-				@beforeline lineno
-				@highlightline = lineno
+				@beforeline @lastline
+				@highlightline = @lastline
 			when "beforestatement"
-				@highlightline = lineno
+				@highlightline = @lastline
 			when "expression"
-				@afterstmt(visvalues, lineno)
-				@afterline lineno
+				@afterstmt(visvalues, @lastline)
+				@afterline @lastline
 		expression
 @coderunner = new coderunner_class()

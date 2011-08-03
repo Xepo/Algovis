@@ -31,7 +31,7 @@ class renderer_class
 		extraleft = barw
 		i = 0
 		
-		while i < extrabars.length
+		for extrabar,i in extrabars
 			continue if extrabars?[i]?[0]? or not extrabars?[i]?[1]? or extrabars?[i]?[1]? == -1
 			name = extrabars[i][0]
 			val = extrabars[i][1]
@@ -42,7 +42,7 @@ class renderer_class
 			context.textAlign = "center"
 			context.textBaseline = "top"
 			context.fillText name, extraleft + i * barw + barw / 2.0, h - 25
-			i++
+
 		for i of highlightindexrange
 			name = highlightindexrange[i][0]
 			low = highlightindexrange[i][1]

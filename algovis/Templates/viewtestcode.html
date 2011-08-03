@@ -7,7 +7,7 @@
 	<script type="text/javascript" src="lib/jquery.js"></script> 
 	<script type='text/javascript'>
 		var coderunner = new function() {
-			this.coffee_hook = function(lineno, vals, eventdesc, expression) {
+			this.coffee_hook = function(vals, eventdesc, lineno, expression) {
 				texttoadd = '';
 				for(var i in vals)
 				{
