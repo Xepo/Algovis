@@ -88,10 +88,16 @@ class coderunner_class
 			@wasshowingrunner = false
 		if @state == "playing"
 			@gobutton.attr "value", "Pause"
+			@prevbutton.attr('disabled', 'disabled');
+			@nextbutton.attr('disabled', 'disabled');
 		else if @state == "paused"
 			@gobutton.attr "value", "Continue"
+			@prevbutton.removeAttr('disabled');
+			@nextbutton.removeAttr('disabled');
 		else
 			@gobutton.attr "value", "Go"
+			@prevbutton.attr('disabled', 'disabled');
+			@nextbutton.attr('disabled', 'disabled');
 	
 	updatespeed: ->
 		delay = @getdelay()

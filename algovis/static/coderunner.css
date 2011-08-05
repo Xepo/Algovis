@@ -10,3 +10,13 @@
 	background-color: #FFFFFF;
 	color: #000000;
 }
+.vishelp {
+	border: 1px solid black;
+	background-color: #BBBBFF;
+	color: #000000;
+	position: absolute;
+	bottom: 30px;
+	right: 30px;
+	filter:alpha(opacity=60); 
+	-moz-opacity: 0.6; 
+}

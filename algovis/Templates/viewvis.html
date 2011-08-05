@@ -35,6 +35,12 @@
 				//coderunner.setcode(%SETCODEHERE%);
 				jQuery.get("${getcodeurl(codesnippet)}", function(data) { coderunner.setcode(data); coderunner.restartrun(); });
 			}
+			function toggleVisHelp() {
+				$('#vishelpdiv').toggle();
+			}
+			function hideVisHelp() {
+				$('#vishelpdiv').hide();
+			}
 		</script>
 </%block>
 
@@ -42,23 +48,29 @@
 	<i>${codesnippet.name}</i> <a href='${getindexurl()}' style='float:right'>&lt;&lt; Back to index</a>
 	<table width='100%'>
 		<tr>
-			<td>
+			<td width='45%'>
 				<div id='errorparent' class='.errorparent'></div>
-				<textarea class='.lined' id='codeview' rows='45' cols='80'></textarea>
-				<input id='gobutton' type='submit' value='Go' style='float:left;'/><input id='prevstep' type='submit' value='<' style='float:left'/><input id='nextstep' type='submit' value='>' style='float:left;'/><input id='stopbutton' type='submit' value='Stop' style='float:left;'/>&nbsp;&nbsp;<label for="speedslider" style='float:left;'>&nbsp;Speed:</label><div id='speedslider' style='width:200px; float:left;'></div><input id='showcoderunner' type='checkbox'/>
+
+				<textarea class='.lined' id='codeview' rows='45' style='min-width:90%;'></textarea>
+
+				<div>
+					<input id='gobutton' type='submit' value='Go' style='float:left;'/><input id='prevstep' type='submit' value='<' style='float:left'/><input id='nextstep' type='submit' value='>' style='float:left;'/><input id='stopbutton' type='submit' value='Stop' style='float:left;'/>&nbsp;&nbsp;<label for="speedslider" style='float:left;'>&nbsp;Speed:</label><div id='speedslider' style='width:200px; float:left;'></div><input id='showcoderunner' type='checkbox' style='display:none;'/>
+					<form method='POST' action='testcode' id='testform' style='display:inline; '>
+						<!--TODO:Make invisible-->
+						<textarea id='testcodedata' name='testcode' style='display:none;'></textarea>
+						<input type='submit' value='Test In Browser'/>
+					</form>
+					<br/><a href='#' onClick='toggleVisHelp();' style='color:blue;'>Visualization help</a>&nbsp;<a href='http://jashkenas.github.com/coffee-script/' target='_blank'>CoffeeScript help</a>
+				</div>
 			</td>
 			<td>
 				<canvas id="rcanvas" width="400" height="400">
 				This text is displayed if your browser does not support HTML5 Canvas.
 				</canvas>
+				<div class='vishelp' id='vishelpdiv' style='display:none;' onClick='hideVisHelp();'><a href='#' onClick='hideVisHelp();' style='float:right;'>x</a><%include file='vishelp.html'/></div>
 			</td>
 		</tr>
 	</table>
-	<form method='POST' action='testcode' id='testform'>
-		<!--TODO:Make invisible-->
-		<textarea id='testcodedata' name='testcode'></textarea>
-		<input type='submit' value='Test'/>
-	</form>
 </body>
 
 
