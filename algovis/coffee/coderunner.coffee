@@ -51,7 +51,7 @@ class coderunner_class
 			@showcoderunner = $("#showcoderunner")
 			@showcoderunner.attr "checked", false
 			@showcoderunner.bind "click", =>
-				this.updatecodeview()
+				@updatecodeview()
 		else
 			@showcoderunner = null
 		@testcodedata = $("#testcodedata")  if $("#testcodedata")
@@ -79,7 +79,8 @@ class coderunner_class
 			@wasshowingrunner = true
 		else
 			@enablecodeview true
-			@setcode @codeview.val()  if not @wasshowingrunner and @code != @codeview.val()
+			console.log "Setting code"
+			@setcode @codeview.val()  if not @wasshowingrunner and @code != @codeview.val() and @newcode? and @newcodef?
 			@codeview.val @code
 			if @state == "stopped"
 				@enablecodeview true
@@ -90,14 +91,17 @@ class coderunner_class
 			@gobutton.attr "value", "Pause"
 			@prevbutton.attr 'disabled', 'disabled'
 			@nextbutton.attr 'disabled', 'disabled'
+			@stopbutton.removeAttr 'disabled'
 		else if @state == "paused"
 			@gobutton.attr "value", "Continue"
 			@prevbutton.removeAttr 'disabled'
 			@nextbutton.removeAttr 'disabled'
+			@stopbutton.removeAttr 'disabled'
 		else
 			@gobutton.attr "value", "Go"
 			@prevbutton.attr 'disabled', 'disabled'
 			@nextbutton.attr 'disabled', 'disabled'
+			@stopbutton.attr 'disabled', 'disabled'
 	
 	updatespeed: ->
 		delay = @getdelay()
@@ -247,6 +251,8 @@ class coderunner_class
 		if @state == "stopped"
 			@inputvalue = null
 			try
+				#TODO: Only call @setcode here, never in @updatecodeview
+				@setcode @codeview.val()
 				@startrun()
 			catch error
 				console.log "Couldn't Go"
@@ -280,6 +286,8 @@ class coderunner_class
 
 	setcode: (@code) ->
 		@showerror()
+		@newcode = null
+		@newcodef = null
 		visualizer.setcode @code
 		@codeview.val @code
 

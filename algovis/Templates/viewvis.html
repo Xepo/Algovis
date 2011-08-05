@@ -49,7 +49,6 @@
 	<table width='100%'>
 		<tr>
 			<td width='45%'>
-				<div id='errorparent' class='.errorparent'></div>
 
 				<textarea class='.lined' id='codeview' rows='45' style='min-width:90%;'></textarea>
 
@@ -60,10 +59,11 @@
 						<textarea id='testcodedata' name='testcode' style='display:none;'></textarea>
 						<input type='submit' value='Test In Browser'/>
 					</form>
-					<br/><a href='#' onClick='toggleVisHelp();' style='color:blue;'>Visualization help</a>&nbsp;<a href='http://jashkenas.github.com/coffee-script/' target='_blank'>CoffeeScript help</a>
 				</div>
 			</td>
 			<td>
+				<div id='errorparent' class='.errorparent' style='position:absolute; top:2em;'></div>
+				<br/>
 				<canvas id="rcanvas" width="400" height="400">
 				This text is displayed if your browser does not support HTML5 Canvas.
 				</canvas>
@@ -71,6 +71,7 @@
 			</td>
 		</tr>
 	</table>
+	<span style='position:absolute; left:10px; bottom:10px;'><a href='#' onClick='toggleVisHelp();' style='color:blue;'>Visualization help</a>&nbsp;|&nbsp;<a href='http://jashkenas.github.com/coffee-script/' target='_blank'>CoffeeScript help</a></span>
 </body>
 
 
