@@ -27,7 +27,7 @@
 				{
 				$('#codeviewcontainer .linedwrap').css('width', '95%');
 				adjustment = $('#codeview').outerWidth(true) - $('#codeview').width();
-				$('#codeview').width($('#codeviewcontainer .linedwrap').width() - $('#codeviewcontainer .lines').outerWidth(true) - adjustment);
+				$('#codeview').width($('#codeviewcontainer .linedwrap').innerWidth() - $('#codeviewcontainer .lines').outerWidth(true) - adjustment - 15);
 				}
 			function main() {
 				$(window).resize(adjustWidth);
