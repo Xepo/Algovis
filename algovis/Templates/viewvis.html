@@ -23,7 +23,15 @@
 		<script type="text/javascript" src="lib/js/jquery-ui-1.8.13.custom.min.js"></script>
 		
 		<script type='text/javascript'>
+			function adjustWidth() 
+				{
+				$('#codeviewcontainer .linedwrap').css('width', '100%');
+				$('#codeview').width($('#codeviewcontainer').width() - $('#codeviewcontainer .lines').width() - 30);
+				}
 			function main() {
+				$(window).resize(adjustWidth);
+
+				//$('#codeview').css('min-width', '90%');
 				coderunner.setup($('#codeview'), $('#speedslider'), $('#gobutton'), $('#stopbutton'), $('#prevstep'), $('#nextstep'), $('#rcanvas'));
 				//coderunner.setcode(insertionsort.toString() + "\ninsertionsort(sortinglist);\n");
 				//coderunner.setcode(bubblesort.toString() + "\nbubblesort(sortinglist);\n");
@@ -34,6 +42,7 @@
 				//coderunner.setcode(getpivotndxbestof3.toString() + quicksorth.toString() + quicksort.toString() + "\nquicksort(sortinglist);\n");
 				//coderunner.setcode(%SETCODEHERE%);
 				jQuery.get("${getcodeurl(codesnippet)}", function(data) { coderunner.setcode(data); coderunner.restartrun(); });
+				adjustWidth();
 			}
 			function toggleVisHelp() {
 				$('#vishelpdiv').toggle();
@@ -48,9 +57,9 @@
 	<i>${codesnippet.name}</i> <a href='${getindexurl()}' style='float:right'>&lt;&lt; Back to index</a>
 	<table width='100%'>
 		<tr>
-			<td width='45%'>
+			<td  id='codeviewcontainer' width='45%'>
 
-				<textarea class='.lined' id='codeview' rows='45' style='min-width:90%;'></textarea>
+				<textarea class='.lined' id='codeview' rows='45'></textarea>
 
 				<div>
 					<input id='gobutton' type='submit' value='Go' style='float:left;'/><input id='prevstep' type='submit' value='<' style='float:left'/><input id='nextstep' type='submit' value='>' style='float:left;'/><input id='stopbutton' type='submit' value='Stop' style='float:left;'/>&nbsp;&nbsp;<label for="speedslider" style='float:left;'>&nbsp;Speed:</label><div id='speedslider' style='width:200px; float:left;'></div><input id='showcoderunner' type='checkbox' style='display:none;'/>
