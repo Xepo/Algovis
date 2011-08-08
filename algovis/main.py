@@ -10,6 +10,7 @@ from google.appengine.ext.webapp import util
 from models import CodeSnippet
 from mako.template import Template
 from mako.lookup import TemplateLookup
+from default import default_snippets
 import mako.exceptions
 import new
 
@@ -45,14 +46,17 @@ class IndexHandler(webapp.RequestHandler):
 
 class PreloadHandler(webapp.RequestHandler):
 	def get(self):
+
 		for storedcosni in CodeSnippet().all():
 			self.response.out.write("Deleting %s<br/>" % (storedcosni.name))
 			storedcosni.delete()
 		defaultdir = os.path.join(os.path.dirname(__file__), 'default_snippets')
-		jsfiles = [fn for fn in os.listdir(defaultdir) if fn.endswith('.coffee')]
+		#jsfiles = [fn for fn in os.listdir(defaultdir) if fn.endswith('.coffee')]
+		jsfiles = default_snippets.keys()
 		for fn in jsfiles:
-			name = os.path.basename(fn)
-			name = name[:-7]
+			#name = os.path.basename(fn)
+			#name = name[:-7]
+			name = fn
 
 			cosni = CodeSnippet(key_name=name)
 
@@ -63,8 +67,10 @@ class PreloadHandler(webapp.RequestHandler):
 				self.response.out.write("Deleting %s<br/>" % (cosni.name))
 				storedcosni.delete()
 
-			with open(os.path.join(defaultdir, fn), 'r') as f:
-				cosni.code = f.read()
+			
+			cosni.code = default_snippets[fn]
+			#with open(os.path.join(defaultdir, fn), 'r') as f:
+				#cosni.code = f.read()
 
 			self.response.out.write("Storing %s<br/>" % (cosni.name))
 			cosni.put()
