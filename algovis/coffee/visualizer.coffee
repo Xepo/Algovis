@@ -120,7 +120,9 @@ class visualizer_bars
 	
 	generateinput: ->
 		console.log "Generating input"
-		return genrandomlist 25, 25
+		@currentvalues =
+			visarray:  genrandomlist 25, 25
+		@currentvalues.visarray
 	
 	needupdate: (values) ->
 		return not deepCompare(@currentvalues, values)
