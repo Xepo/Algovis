@@ -25,8 +25,9 @@
 		<script type='text/javascript'>
 			function adjustWidth() 
 				{
-				$('#codeviewcontainer .linedwrap').css('width', '100%');
-				$('#codeview').width($('#codeviewcontainer').width() - $('#codeviewcontainer .lines').width() - 30);
+				$('#codeviewcontainer .linedwrap').css('width', '95%');
+				adjustment = $('#codeview').outerWidth(true) - $('#codeview').width();
+				$('#codeview').width($('#codeviewcontainer .linedwrap').width() - $('#codeviewcontainer .lines').outerWidth(true) - adjustment);
 				}
 			function main() {
 				$(window).resize(adjustWidth);
@@ -54,7 +55,15 @@
 </%block>
 
 <body onLoad="main()">
-	<i>${codesnippet.name}</i> <a href='${getindexurl()}' style='float:right'>&lt;&lt; Back to index</a>
+	<i>${codesnippet.name}</i> 
+	<span style='float:right;'>
+		<a href='#' onClick='toggleVisHelp();' style='color:blue;'>Visualization help</a>
+		&nbsp;|&nbsp;
+		<a href='http://jashkenas.github.com/coffee-script/' target='_blank'>CoffeeScript help</a>
+		&nbsp;|&nbsp;
+		<a href='${getindexurl()}'>&lt;&lt; Back to index</a>
+	</span>
+	
 	<table width='100%'>
 		<tr>
 			<td  id='codeviewcontainer' width='45%'>
@@ -80,7 +89,6 @@
 			</td>
 		</tr>
 	</table>
-	<span style='position:absolute; left:10px; bottom:10px;'><a href='#' onClick='toggleVisHelp();' style='color:blue;'>Visualization help</a>&nbsp;|&nbsp;<a href='http://jashkenas.github.com/coffee-script/' target='_blank'>CoffeeScript help</a></span>
 </body>
 
 

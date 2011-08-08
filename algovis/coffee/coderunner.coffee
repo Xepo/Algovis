@@ -165,11 +165,13 @@ class coderunner_class
 		catch er
 			whoafinished = false
 			unless er == "coderunner_pause"
-				exer = "Exception on line #{@highlightline}: \n#{er}\n"
-				exer += "\nStack trace: \n"  if @stack.length > 1
-				for own v of @stack
-					exer += "\tLine " + v + "\n"
-				alert exer
+				exer = "Exception on line #{@highlightline}: <br/><code style='padding-left:1em;'>#{er}</code><br/>"
+				exer += "\nStack trace: <br/>"  if @stack.length > 1
+				exer += "<code style='display:block; padding-left: 1em;'>"
+				for v in @stack
+					exer += "Line " + v + "<br/>\n"
+				exer += "</code>"
+				@showerror exer
 				whoafinished = true
 		whoafinished
 	
@@ -177,7 +179,7 @@ class coderunner_class
 		if msg?
 			$('#errorparent').show()
 			$('#errorparent').empty()
-			$('#errorparent').append "<span class='error'>#{msg}</span>"
+			$('#errorparent').append "<div class='error'>#{msg}</div>"
 		else
 			$('#errorparent').empty()
 			$('.errorparent').hide()

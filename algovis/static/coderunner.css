@@ -16,7 +16,7 @@
 	border: 1px solid black;
 	background-color: #BBBBFF;
 	color: #000000;
-	position: absolute;
+	position: fixed;
 	bottom: 30px;
 	right: 30px;
 	filter:alpha(opacity=60); 
