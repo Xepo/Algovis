@@ -1,5 +1,5 @@
 default_snippets = {
-		'bubblesort': """
+		'Bubble Sort': """
 vis = "!vis-type: bar; !vis-array: myl; !vis-index: i; !vis-index: i-1;"
 bubblesort = (l) ->
 	myl = l
@@ -14,7 +14,7 @@ bubblesort sortinglist
 """,
 
 
-'insertionsort': """
+'Insertion Sort': """
 vis = "!vis-type: bar; !vis-array: myl; !vis-index: i; !vis-index: j; !vis-indexrange: sorted 0 j; !vis-extrabar: inserting key;"
 insertionsort = (l) ->
   myl = l
@@ -31,7 +31,7 @@ insertionsort = (l) ->
 
 insertionsort sortinglist
 """,
-'combsort': """
+'Comb Sort': """
 vis = "!vis-type: bar; !vis-array: myl; !vis-index: i,i+gap;"
 combsort = (myl) ->
   gap = myl.length
@@ -49,7 +49,7 @@ combsort = (myl) ->
       i++
 combsort sortinglist
 """,
-'heapsort':"""
+'Heap Sort':"""
 heapsort = (l) ->
   myl = l
   heapify myl
@@ -81,17 +81,23 @@ lastindex = sortinglist.length - 1
 sortedend = sortinglist.length
 heapsort sortinglist
 """,
-'quicksort': """
+'Quick Sort': """
 quicksorth = (myl, left, right) ->
-  return  if right <= left
+  return myl if right <= left
   if right - left == 1
     swapinlist myl, left, right  if myl[left] > myl[right]
-    return
+    return myl
+
+  #Find best-of-3 pivot
   pivot = left
   mid = (left + right) / 2
-  unless (myl[right] >= myl[left]) == (myl[right] >= myl[mid])
+  if (myl[right] >= myl[left]) != (myl[right] >= myl[mid])
     pivot = right
-  else pivot = mid  unless (myl[mid] >= myl[left]) == (myl[mid] >= myl[right])
+  else if (myl[mid] >= myl[left]) != (myl[mid] >= myl[right])
+    pivot = mid 
+
+
+  #Do partition
   ml = left
   mr = right
   swapinlist myl, pivot, ml
@@ -102,18 +108,22 @@ quicksorth = (myl, left, right) ->
     while ml < mr and myl[mr] >= myl[pivot]
       mr--
     swapinlist myl, ml, mr
+
+  #Move pivot back to middle
   ml--  if myl[ml] > myl[pivot]
   swapinlist myl, ml, pivot
+
+  #Recurse to each side
   quicksorth myl, left, ml - 1
   quicksorth myl, ml + 1, right
-quicksort = (l) ->
-  myl = l
+
+quicksort = (myl) ->
   quicksorth myl, 0, myl.length - 1
-  myl
+  
 vis = "!vis-type: bar; !vis-array: myl; !vis-index: pivot,ml,mr; !vis-indexrange: current left right;"
 quicksort sortinglist
 """,
-'selectionsort': """
+'Selection Sort': """
 selectionsort = (l) ->
   myl = l
   
@@ -130,7 +140,7 @@ selectionsort = (l) ->
 vis = "!vis-type: bar; !vis-array: myl; !vis-index: ipos, i, imin;  !vis-indexrange: sorted 0 ipos-1;"
 selectionsort sortinglist
 """,
-'shellsort': """
+'Shell Sort': """
 shellsort = (l) ->
   myl = l
   inc = Math.round(myl.length / 2)

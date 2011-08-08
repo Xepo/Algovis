@@ -3,7 +3,20 @@
 ##
 <%inherit file="base.html"/>
 
-<body>
+<body style='background-color: #EEEEFF'>
+	<div style='width:50%'>
+		<p>This is Algovis, an algorithm visualization project, created by Isaiah Damron.</p>
+
+		<p>Click on one of the preloaded algorithms below, watch them go, play with the code on the left, and hit "Go" to see what effects your changes have! You can also pause the code while it's running, and step back and forth.  The language is <a href='http://www.coffeescript.org'>CoffeeScript</a>, and for those of you unfamiliar with it, it's a fast, fun language that compiles to javascript.</p>
+		
+		<p>Algovis is still in initial development ("Alpha", if you will). Currently, it only supports sorting algorithms and only one type of visualization, but there are more to come. Also, there's no way to save the code you write, other than copy and paste of course!</p>
+
+		<p>Note that the apparent speed of each algorithm can be deceiving, because of the hooks needed to support the visualization.</p>
+
+		<p>Any feedback or help would be appreciated at <a href='https://github.com/Xepo/Algovis'>Github</a>.  Have fun!</p>
+	</div>
+
+	<br/>
 	<ul>
 		% for cosni in codesnippets:
 			<li><a href='${getvisurl(cosni)}'>${cosni.name}</a></li>
