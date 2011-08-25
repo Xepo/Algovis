@@ -242,8 +242,10 @@ class coderunner_class
 				attick = changetick
 				retchange = atchange
 
-		if attick > @record.length
-			return null
+		if attick >= @record.length
+			attick = @record.length - 1
+		else if attick < 0
+			attick = 0
 
 
 		@stack = owl.deepCopy(@record[attick][0])
