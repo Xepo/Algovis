@@ -125,9 +125,10 @@ class visualizer_bars
 		@currentvalues.visarray
 	
 	needupdate: (values) ->
+		return false if not values?.visarray?
 		return not deepCompare(@currentvalues, values)
 	
-	afterstmt: (values) ->
+	update: (values) ->
 		@currentvalues = owl.deepCopy(values)  if values?.visarray?
 	
 	render: ->
@@ -192,7 +193,7 @@ class visualizer_graph
 		ret = not deepCompare(@currentvalues, values)
 		ret
 	
-	afterstmt: (values) ->
+	update: (values) ->
 		@currentvalues = owl.deepCopy(values)  if values and values.hasOwnProperty("visadjmatrix") and values.visadjmatrix
 	
 	generateinput: ->
@@ -260,9 +261,9 @@ class visualizer_class
 			return true  if @visualizers[i].needupdate(values[i])
 		false
 	
-	afterstmt: (values) ->
+	update: (values) ->
 		for i of @visualizers
-			@visualizers[i].afterstmt values[i]
+			@visualizers[i].update values[i]
 	
 	render: ->
 		@clearcanvas()

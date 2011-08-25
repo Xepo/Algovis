@@ -39,10 +39,10 @@ class coderunner_class
 			this.stoprun()
 		
 		@prevbutton.bind "click", =>
-			this.nextstep -1
+			@displaynext -1
 		
 		@nextbutton.bind "click", =>
-			this.nextstep 1
+			@displaynext 1
 		
 		@timer = $.timer()
 		@canvas = canvas
@@ -59,7 +59,7 @@ class coderunner_class
 		@stack = []
 		@state = "stopped"
 		@updatespeed()
-		@record = []
+		@clearrecord()
 		@inputvalue = null
 		visualizer.setup canvas
 	
@@ -131,31 +131,6 @@ class coderunner_class
 		else
 			1000 - Math.sqrt(Math.sqrt(curspeed)) * 312
 	
-	getdepth: ->
-		i = 0
-		c = @getdepth.caller
-		while c
-			i++
-			c = c.caller
-	
-	beforeline: (highlightline) ->
-		@stack.push highlightline
-	
-	afterstmt: (visvalues, highlightline) ->
-		@highlightline = highlightline
-		needup = visualizer.needupdate(visvalues)
-		visualizer.afterstmt visvalues
-		throw "coderunner_pause"  unless @state == "playing"
-		@updatespeed()
-		return false  if @onlypausewhenchanged and not needup
-		@ranlines++
-		@record.push [ owl.deepCopy(@stack), @highlightline, owl.deepCopy(visvalues) ]  if @ranlines > @record.length
-		return false  if @fastforward or @ranlines < @ranlinesmax
-		throw "coderunner_pause"
-	
-	afterline: (highlightline) ->
-		@stack.pop()
-	
 	doeval: ->
 		_TopCodeRunNext_ = 0
 		whoafinished = false
@@ -164,7 +139,7 @@ class coderunner_class
 			whoafinished = true  if @newcodef(inputval2) == "finished"
 		catch er
 			whoafinished = false
-			unless er == "coderunner_pause"
+			unless er == "coderunner_interrupt"
 				exer = "Exception on line #{@highlightline}: <br/><code style='padding-left:1em;'>#{er}</code><br/>"
 				exer += "\nStack trace: <br/>"  if @stack.length > 1
 				exer += "<code style='display:block; padding-left: 1em;'>"
@@ -181,47 +156,64 @@ class coderunner_class
 			$('#errorparent').empty()
 			$('#errorparent').append "<div class='error'>#{msg}</div>"
 		else
+			console.log $('#errorparent')
 			$('#errorparent').empty()
-			$('.errorparent').hide()
+			$('#errorparent').hide()
 
 
-	nextstep: (amt) ->
-		visualizer.nextstep()
-		return  if @state != "playing" and @state != "paused"
-		unless visualizer.isready()
-			@stoprun()
+	checksetup: ->
+		if @inputvalue?
 			return
-		amt = (if typeof (amt) != "undefined" then amt else @runstep)
-		@queueup = @ranlinesmax
-		@ranlinesmax = @ranlinesmax + amt
-		if @record.length > @ranlinesmax
-			@stack = owl.deepCopy(@record[@ranlinesmax][0])
-			@highlightline = @record[@ranlinesmax][1]
-			visualizer.afterstmt owl.deepCopy(@record[@ranlinesmax][2])
-			finished = false
-		else
-			@inputvalue ?= visualizer.generateinput()
-			console.log "Using input " + @inputvalue
-			jumpto = @ranlinesmax + (@runstep * 10000)
-			prevranlinesmax = @ranlinesmax
-			@ranlinesmax = jumpto
-			console.log "Currently " + prevranlinesmax + ", Recording to " + @ranlinesmax + ", currentl rec'd:" + @record.length
-			rlength = @record.length
-			@ranlines = 0
-			@stack = []
-			finished = @doeval()
-			@ranlinesmax = prevranlinesmax
-			@ranlinesmax = @record.length - 1  if @ranlinesmax >= @record.length
-			rec = @record[@ranlinesmax]
-			if rec?
-				@stack = owl.deepCopy(rec[0])
-				@highlightline = rec[1]
-				visualizer.afterstmt owl.deepCopy(rec[2])
-			console.log "Now rec'd: " + @record.length
-			console.log "Ranlinesmax:" + @ranlinesmax
-			if rlength == @record.length
-				finished = true
-			else finished = false  if @ranlinesmax < @record.length
+		@clearrecord()
+		@inputvalue = visualizer.generateinput()
+		console.log "Using input " + @inputvalue
+
+	clearrecord: ->
+		@record = []
+		@changestoticks = []
+		@recordedall = false
+
+	nexttick: (visvalues) ->
+		needup = false
+		@ranticks++
+
+		if visvalues?
+			needup = visualizer.needupdate(visvalues)
+
+			if needup
+				visualizer.update visvalues
+				@ranchanges++
+				if @ranchanges >= @changestoticks.length
+					@changestoticks.push @ranticks
+
+		if @ranticks >= @record.length
+			if visvalues?
+				@record.push [ owl.deepCopy(@stack), @highlightline, owl.deepCopy(visvalues) ]
+			else
+				@record.push [ owl.deepCopy(@stack), @highlightline, {} ]
+
+		if @state != "playing" or @interruptattick? and @ranticks >= @interruptattick or @interruptatchange? and @ranchanges >= @interruptatchange
+			throw "coderunner_interrupt" unless @fastforward
+
+		@updatespeed()
+
+	fetchnewrecords: (@interruptattick, @interruptatchange) ->
+		#Make sure we fetch a decent bit at one time
+		if @recordedall
+			return
+		if @interruptattick - @record.length < 200
+			@interruptattick = @record.length + 200
+		if @interruptatchange - @changestoticks.length < 50
+			@interruptatchange = @changestoticks.length + 50
+
+		console.log "Evaling for new records"
+		@stack = []
+		@ranticks=0
+		@ranchanges=0
+		@recordedall = false
+		@recordedall = @doeval()
+
+	refreshlinesdisplay: ->
 		$(".lineselect").removeClass "lineselect"
 		$(".linecaller").removeClass "linecaller"
 		$("#lineno-" + @highlightline).addClass "lineselect"
@@ -229,16 +221,71 @@ class coderunner_class
 		while @stack.length
 			lineno = @stack.pop()
 			$("#lineno-" + lineno).addClass "linecaller"  unless lineno == @highlightline
-		if finished
+
+	display: (attick, atchange) ->
+		#visualizer.nextstep()
+		if not visualizer.isready()
+			@stoprun()
+			return
+
+		retchange = null
+		alreadyhaverecord = attick? and attick < @record.length or atchange? and atchange < @changestoticks.length and (not attick? or @changestoticks[atchange] < attick?)
+
+		if not alreadyhaverecord
+			@fetchnewrecords attick, atchange
+
+		if atchange? and @changestoticks.length > atchange
+			changetick = @changestoticks[atchange]
+			attick ?= changetick
+			if changetick < attick
+				console.log "Choosing change #{atchange} at #{changetick}"
+				attick = changetick
+				retchange = atchange
+
+		if attick > @record.length
+			return null
+
+
+		@stack = owl.deepCopy(@record[attick][0])
+		@highlightline = @record[attick][1]
+		visualizer.update owl.deepCopy(@record[attick][2])
+
+		visualizer.render()
+		@refreshlinesdisplay()
+
+		return [attick, atchange]
+
+	displaynext: (amtticks=null, amtchanges=@runstep) ->
+		return  if @state != "playing" and @state != "paused"
+		amtticks?=amtchanges*17
+
+		@checksetup()
+
+		shown = @display @showingtick+amtticks, @showingchange+amtchanges
+
+		advancedticks = (shown?[0] ? @showingtick) - @showingtick
+		advancedchanges = (shown?[1] ? @showingchange) - @showingchange
+
+		if amtticks > 0 and advancedticks == 0
+			console.log "Didn't advance, stopping run at tick #{@showingtick}"
+			@stoprun()
+
+		@showingtick += advancedticks
+		@showingchange += advancedchanges
+
+		if @recordedall and @showingtick >= @record.length
 			console.log "finished"
 			@stoprun()
 	
 	startrun: ->
 		@timer.stop()
-		@record = []
-		@ranlinesmax = 0
-		@ranlines = 0
-		@startedtime = (new Date).getTime()
+
+		@clearrecord()
+
+		@showingtick = 0
+		@showingchange = 0
+
+		@startedtime = @getTimestamp()
 		@unpauserun()
 	
 	restartrun: ->
@@ -248,7 +295,6 @@ class coderunner_class
 	skiptoendofrun: ->
 		@fastforward = true
 	
-	#TODO: Count by lines when stepping, count by states when running.
 	gobuttonclick: ->
 		if @state == "stopped"
 			@inputvalue = null
@@ -260,12 +306,13 @@ class coderunner_class
 				console.log "Couldn't Go"
 		else if @state == "playing"
 			@pauserun()
-		else @unpauserun()  if @state == "paused"
+		else @unpauserun()	if @state == "paused"
 	
 	unpauserun: ->
+		act = =>
+			@displaynext()
 		@timer = $.timer(
-			action: =>
-				this.nextstep()
+			action: act
 			
 			time: @getdelay()
 		)
@@ -281,7 +328,9 @@ class coderunner_class
 	stoprun: ->
 		@pauserun()
 		@state = "stopped"
-		@ranlinesmax = 0
+		@interruptattick = 0
+		@interruptatchange = 0
+		@changestoticks = {}
 		@stoppedtime = (new Date).getTime()
 		console.log "Time of run: " + (@stoppedtime - @startedtime)
 		@updatecodeview()
@@ -290,6 +339,7 @@ class coderunner_class
 		@showerror()
 		@newcode = null
 		@newcodef = null
+		@clearrecord()
 		visualizer.setcode @code
 		@codeview.val @code
 
@@ -307,7 +357,6 @@ class coderunner_class
 			jscode = CoffeeScript.compile(@code, {'hook': 'coderunner.coffee_hook'})
 		catch error
 			alert "Internal Error!  Contact algovis developer.\n#{error}"
-		lineno = -1
 		visparam = visualizer.getvaluesasparameter()
 		jscode = jscode.replace /coderunner.coffee_hook\(/g, (g0) -> g0 + visparam + ","
 
@@ -321,16 +370,19 @@ class coderunner_class
 		@testcodedata.text @newcode
 		@newcodef = eval("(" + @newcode + ")")
 
+	getTimestamp: ->
+		(new Date).getTime()
+
 	coffee_hook: (visvalues, eventtype, lineno, expression) ->
-		@lastline = lineno if lineno?
+		@highlightline = lineno if lineno?
+		@nexttick visvalues
 		switch eventtype
 			when "beforeexpression"
-				@beforeline @lastline
-				@highlightline = @lastline
-			when "beforestatement"
-				@highlightline = @lastline
+				@stack.push @highlightline
 			when "expression"
-				@afterstmt(visvalues, @lastline)
-				@afterline @lastline
+				@stack.pop()
+			when "beforestatement"
+				0 #Donothing
 		expression
+
 @coderunner = new coderunner_class()
