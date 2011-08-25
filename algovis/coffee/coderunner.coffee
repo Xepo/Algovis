@@ -238,7 +238,6 @@ class coderunner_class
 			changetick = @changestoticks[atchange]
 			attick ?= changetick
 			if changetick < attick
-				console.log "Choosing change #{atchange} at #{changetick}"
 				attick = changetick
 				retchange = atchange
 
