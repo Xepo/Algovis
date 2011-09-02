@@ -1,13 +1,3 @@
-isArray = (obj) ->
-	if obj.constructor.toString().indexOf("Array") == -1
-		false
-	else
-		true
-isObject = (obj) ->
-	if obj.constructor.toString().indexOf("Object") == -1
-		false
-	else
-		true
 genrandomlist = (len, max) ->
 	ret = []
 	i = 0
@@ -17,43 +7,21 @@ genrandomlist = (len, max) ->
 		ret.push randomnumber
 		i++
 	ret
-deepCompare = (obj1, obj2) ->
-	return false  unless obj1? == obj2?
-	return true  if not obj1?
-
-	isarr1 = isArray(obj1)
-	isarr2 = isArray(obj2)
-	isobj1 = isObject(obj1)
-	isobj2 = isObject(obj2)
-	return false  if isarr1 != isarr2
-	return false  if isobj1 != isobj2
-	if isarr1 and isarr2 and obj1.length != obj2.length
-		false
-	else if isarr1
-		for i of obj1
-			return false  unless deepCompare(obj1[i], obj2[i])
-		true
-	else if isobj1
-		for prop of obj1
-			if not obj1.hasOwnProperty(prop) and not obj2.hasOwnProperty(prop)
-				continue
-			else unless obj1.hasOwnProperty(prop) == obj2.hasOwnProperty(prop)
-				return false
-			else return false  unless deepCompare(obj1[prop], obj2[prop])
-		true
-	else
-		obj1 == obj2
 @highlightcolors = [ "rgb(255,50,50)", "rgb(50,255,50)", "rgb(50,50,255)" ]
 class visualizer_bars
-	reset: ->
-		@currentvalues = visarray: []
-	
 	resetsettings: ->
 		@visarray = null
 		@visindex = []
 		@visindexranges = []
 		@visextrabars = []
-		@reset()
+
+		@visarrayfunc = -> []
+		@visindexfunc = []
+		@visindexrangesfunc = []
+		@visextrabarsfunc = []
+
+	getrendervaluefcn: (expr) ->
+		eval("a = function() { with (visualizer.currentrendervalues) { return (#{expr}); } }")
 
 	setsettings: (settings) ->
 		@resetsettings()
@@ -63,21 +31,31 @@ class visualizer_bars
 			param = commands[i][1]
 			if command == "array"
 				@visarray = param
+				@visarrayfunc = @getrendervaluefcn(param)
 			else if command == "index"
-				@visindex = @visindex.concat(param.split(","))
+				params = param.split(',')
+				for i of params
+					@visindex.push params[i]
+					@visindexfunc.push @getrendervaluefcn(params[i])
 			else if command == "indexrange"
 				params = param.split(" ")
 				irange = Object()
 				irange.name = params[0]
 				irange.lowrange = params[1]
 				irange.highrange = params[2]
+
+				frange = Object()
+				frange.lowrange = @getrendervaluefcn(irange.lowrange)
+				frange.highrange = @getrendervaluefcn(irange.highrange)
 				@visindexranges.push irange
+				@visindexrangesfunc.push frange
 			else if command == "extrabar"
 				params = param.split(" ")
 				ibar = Object()
 				ibar.name = params[0]
 				ibar.value = params[1]
 				@visextrabars.push ibar
+				@visextrabarsfunc.push @getrendervaluefcn(ibar.value)
 		assert @visarray
 
 	setup: (canvas, rect, settings) ->
@@ -89,51 +67,29 @@ class visualizer_bars
 	isready: ->
 		true
 	
-	getinitstmt: ->
+	getvars: ->
 		retvars = @visarray
-		retvars += "," + @visindex.join(",")
+		for i of @visindex
+			retvars += "," + @visindex[i] + ""
 		for i of @visindexranges
 			retvars += "," + @visindexranges[i].lowrange + "," + @visindexranges[i].highrange
 		for i of @visextrabars
 			retvars += "," + @visextrabars[i].value
-		retvars += ","
 		vars = retvars.match(/[a-zA-Z][a-zA-Z0-9]*(?!\()/g)
-		#"var " + vars.join("=null,") + "=null;"
-		"" + vars.join(",") + ""
+		vars
 	
-	getvaluesasparameter: ->
-		param = (expr) -> "((typeof #{expr} === 'undefined' || #{expr} === null) ? null :  (#{expr}))"
-		ret = "{'visarray': " + param(@visarray)
-		ret += ", 'indexes': [" + [param(ind) for ind in @visindex].join(",") + "]"  if @visindex.length > 0
-		if @visindexranges.length > 0
-			irange = for j of @visindexranges
-				thisrange = @visindexranges[j]
-				"['" + thisrange.name + "'," + param(thisrange.lowrange) + "," + param(thisrange.highrange) + "]"
-			ret += ", 'indexranges': [" + irange.join(",") + "]"
-		if @visextrabars.length > 0
-			ibar = []
-			for j of @visextrabars
-				thisbar = @visextrabars[j]
-				ibar.push "['" + thisbar.name + "'," + param(thisbar.value) + "]"
-			ret += ", 'extrabars': [" + ibar.join(",") + "]"
-		ret + "}"
-	
+	initvaluesobj: (o) ->
+		vars = @getvars()
+		for i of vars
+			o[vars[i]] = null
+
+
 	generateinput: ->
 		console.log "Generating input"
-		@currentvalues =
-			visarray:  genrandomlist 25, 25
-		@currentvalues.visarray
+		genrandomlist 25,25
 	
-	needupdate: (values) ->
-		return false if not values?.visarray?
-		return not deepCompare(@currentvalues, values)
-	
-	update: (values) ->
-		@currentvalues = owl.deepCopy(values)  if values?.visarray?
-	
-	render: ->
-		values = @currentvalues
-		if values?.visarray?.length > 0
+	render: (values) ->
+		if values?[@visarray]?.length > 0
 			
 		else
 			console.log "undefinedrender"
@@ -141,10 +97,21 @@ class visualizer_bars
 		context = @canvas[0].getContext("2d")
 		w = @canvas.width()
 		h = @canvas.height()
-		extrabars = values.extrabars ? []
-		while extrabars.length < @visextrabars.length
-			extrabars.push [ "", -1 ]
-		renderer.render_bars context, w, h, values.visarray, values.indexes, values.indexranges, extrabars
+
+
+		renarray = values[@visarray]
+
+		renindex = []
+		for i of @visindexfunc
+			renindex.push @visindexfunc[i]()
+		renindexranges = []
+		for i of @visindexranges
+			renindexranges.push [@visindexranges[i].name, @visindexrangesfunc[i].lowrange(), @visindexrangesfunc[i].highrange()]
+		renextrabars = []
+		for i of @visextrabars
+			renextrabars.push [@visextrabars[i].name, @visextrabarsfunc[i]?()]
+
+		renderer.render_bars context, w, h, renarray, renindex, renindexranges, renextrabars
 	
 	
 
@@ -157,14 +124,11 @@ class visualizer_graph
 	isready: ->
 		true
 	
-	reset: ->
-		@currentvalues = visarray: []
 	
 	resetsettings: ->
 		@visadjmatrix = null
 		@visedge = []
 		@visvertex = []
-		@reset()
 	
 	setsettings: (settings) ->
 		@resetsettings()
@@ -188,13 +152,6 @@ class visualizer_graph
 	getvaluesasparameter: ->
 		ret = "{'visadjmatrix': " + @visadjmatrix
 		ret + "}"
-	
-	needupdate: (values) ->
-		ret = not deepCompare(@currentvalues, values)
-		ret
-	
-	update: (values) ->
-		@currentvalues = owl.deepCopy(values)  if values and values.hasOwnProperty("visadjmatrix") and values.visadjmatrix
 	
 	generateinput: ->
 		console.log "Generating matrix"
@@ -234,19 +191,18 @@ class visualizer_class
 	setup: (canvas) ->
 		@canvas = canvas
 		@resetcode()
+		@valuesobj = {}
 	
-	getinitstmt: ->
-		initstmts = []
-		for i of @visualizers
-			initstmts.push @visualizers[i].getinitstmt()
-		initstmts.join ";"
+	reset: ->
+		@valuesobj = {}
+		@visualizers[0].initvaluesobj(@valuesobj)
 	
-	getvaluesasparameter: ->
-		valparams = []
-		for i of @visualizers
-			valparams.push @visualizers[i].getvaluesasparameter()
-		"[" + valparams.join(",") + "]"
-	
+	getvars: ->
+		vars = @visualizers[0].getvars()
+		for i of vars
+			@valuesobj[vars[i]] = null
+		vars
+
 	generateinput: ->
 		@visualizers[0].generateinput()
 	
@@ -256,19 +212,11 @@ class visualizer_class
 	nextstep: ->
 		@clearcanvas()
 	
-	needupdate: (values) ->
-		for i of @visualizers
-			return true  if @visualizers[i].needupdate(values[i])
-		false
-	
-	update: (values) ->
-		for i of @visualizers
-			@visualizers[i].update values[i]
-	
-	render: ->
+	render: (values) ->
 		@clearcanvas()
+		@currentrendervalues = values
 		for i of @visualizers
-			@visualizers[i].render()
+			@visualizers[i].render(values)
 	
 	findcommands: (code) ->
 		mycode = code
@@ -283,9 +231,6 @@ class visualizer_class
 		console.log commands
 		commands
 	
-	reset: ->
-		for i of @visualizers
-			@visualizers[i].reset()
 	
 	resetcode: ->
 		@visualizers = []

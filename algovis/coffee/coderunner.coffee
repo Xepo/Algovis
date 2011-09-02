@@ -14,6 +14,47 @@ comparearray = (ar1, ar2) ->
 		return false  unless ar1[i] == ar2[i]
 		i++
 	true
+`_.isEqualNull = function(a, b) {
+    // Check object identity.
+    if (a === b) return true;
+    if (_.isNull(a) && _.isNull(b)) return true;
+    // Different types?
+    var atype = typeof(a), btype = typeof(b);
+    if (atype != btype) return false;
+    // Basic equality test (watch out for coercions).
+    if (a == b) return true;
+    // One is falsy and the other truthy.
+    if ((!a && b) || (a && !b)) return false;
+    // Unwrap any wrapped objects.
+    if (a._chain) a = a._wrapped;
+    if (b._chain) b = b._wrapped;
+    // One of them implements an isEqual()?
+    if (a.isEqual) return a.isEqual(b);
+    if (b.isEqual) return b.isEqual(a);
+    // Check dates' integer values.
+    if (_.isDate(a) && _.isDate(b)) return a.getTime() === b.getTime();
+    // Both are NaN?
+    if (_.isNaN(a) && _.isNaN(b)) return false;
+    // Compare regular expressions.
+    if (_.isRegExp(a) && _.isRegExp(b))
+      return a.source     === b.source &&
+             a.global     === b.global &&
+             a.ignoreCase === b.ignoreCase &&
+             a.multiline  === b.multiline;
+    // If a is not an object by this point, we can't handle it.
+    if (atype !== 'object') return false;
+    // Check for different array lengths before comparing contents.
+    if (a.length && (a.length !== b.length)) return false;
+    // Nothing else worked, deep compare the contents.
+    var aKeys = _.keys(a), bKeys = _.keys(b);
+    // Different object sizes?
+    if (aKeys.length != bKeys.length) return false;
+    // Recursive comparison of contents.
+    for (var key in a) if (!(key in b) || !_.isEqualNull(a[key], b[key])) return false;
+    return true;
+  };
+  `
+
 @assert = assert
 toline = 0
 newcode = ""
@@ -61,6 +102,7 @@ class coderunner_class
 		@updatespeed()
 		@clearrecord()
 		@inputvalue = null
+		@lastup = {}
 		visualizer.setup canvas
 	
 	enablecodeview: (b) ->
@@ -135,17 +177,20 @@ class coderunner_class
 		_TopCodeRunNext_ = 0
 		whoafinished = false
 		try
+			@lastup = {}
+			visualizer.reset()
 			inputval2 = owl.deepCopy(@inputvalue)
 			whoafinished = true  if @newcodef(inputval2) == "finished"
 		catch er
 			whoafinished = false
-			unless er == "coderunner_interrupt"
+			if er != "coderunner_interrupt"
 				exer = "Exception on line #{@highlightline}: <br/><code style='padding-left:1em;'>#{er}</code><br/>"
 				exer += "\nStack trace: <br/>"  if @stack.length > 1
 				exer += "<code style='display:block; padding-left: 1em;'>"
 				for v in @stack
 					exer += "Line " + v + "<br/>\n"
 				exer += "</code>"
+				console.log exer
 				@showerror exer
 				whoafinished = true
 		whoafinished
@@ -173,26 +218,34 @@ class coderunner_class
 		@changestoticks = []
 		@recordedall = false
 
-	nexttick: (visvalues) ->
+	nexttick: ->
 		needup = false
 		@ranticks++
 
-		if visvalues?
-			needup = visualizer.needupdate(visvalues)
+		if @ranticks < @record.length and @highlightline != @record[@ranticks][1]
+			console.log "Invalid tick ##{@ranticks}! line #{@highlightline} vs. #{@record[@ranticks][1]}\n"
 
-			if needup
-				visualizer.update visvalues
-				@ranchanges++
-				if @ranchanges >= @changestoticks.length
-					@changestoticks.push @ranticks
+		needup = not _.isEqualNull(@lastup, visualizer.valuesobj)
 
-		if @ranticks >= @record.length
-			if visvalues?
-				@record.push [ owl.deepCopy(@stack), @highlightline, owl.deepCopy(visvalues) ]
-			else
-				@record.push [ owl.deepCopy(@stack), @highlightline, {} ]
+		if needup
+			@lastup = owl.deepCopy(visualizer.valuesobj)
+			@ranchanges++
+			###if @record.length <= @changestoticks[@ranchanges]
+				console.log "Changes to ticks is ahead of record"
+			else if not deepCompare(@lastup, @record[@changestoticks[@ranchanges]][2])
+				console.log "Invalid compare:\n#{@lastup.toSource()}\n" + @record[@changestoticks[@ranchanges]][2].toSource()###
+			while @ranchanges >= @changestoticks.length
+				@changestoticks.push @ranticks
 
-		if @state != "playing" or @interruptattick? and @ranticks >= @interruptattick or @interruptatchange? and @ranchanges >= @interruptatchange
+		while @ranticks >= @record.length
+			@record.push [owl.deepCopy(@stack), @highlightline, @lastup ]
+
+		if @state != "playing" or @interruptattick? and @ranticks >= @interruptattick
+			console.log "Interrupting for tick #{@ranticks} >= #{@interruptattick}"
+			throw "coderunner_interrupt" unless @fastforward
+
+		if @interruptatchange? and @ranchanges >= @interruptatchange
+			console.log "Interrupting for change #{@ranchanges} >= #{@interruptatchange}"
 			throw "coderunner_interrupt" unless @fastforward
 
 		@updatespeed()
@@ -201,14 +254,15 @@ class coderunner_class
 		#Make sure we fetch a decent bit at one time
 		if @recordedall
 			return
-		if @interruptattick - @record.length < 200
-			@interruptattick = @record.length + 200
+		if @interruptattick - @record.length < 50*101
+			@interruptattick = @record.length + 50*101
 		if @interruptatchange - @changestoticks.length < 50
 			@interruptatchange = @changestoticks.length + 50
 
 		console.log "Evaling for new records"
 		@stack = []
 		@ranticks=0
+		@lastup = {}
 		@ranchanges=0
 		@recordedall = false
 		@recordedall = @doeval()
@@ -217,7 +271,6 @@ class coderunner_class
 		$(".lineselect").removeClass "lineselect"
 		$(".linecaller").removeClass "linecaller"
 		$("#lineno-" + @highlightline).addClass "lineselect"
-		visualizer.render()
 		while @stack.length
 			lineno = @stack.pop()
 			$("#lineno-" + lineno).addClass "linecaller"  unless lineno == @highlightline
@@ -237,9 +290,13 @@ class coderunner_class
 		if atchange? and @changestoticks.length > atchange
 			changetick = @changestoticks[atchange]
 			attick ?= changetick
-			if changetick < attick
+			if changetick <= attick
 				attick = changetick
 				retchange = atchange
+
+		ticktochange = @changestoticks.indexOf attick
+		if ticktochange != -1
+			retchange = ticktochange
 
 		if attick >= @record.length
 			attick = @record.length - 1
@@ -249,16 +306,15 @@ class coderunner_class
 
 		@stack = owl.deepCopy(@record[attick][0])
 		@highlightline = @record[attick][1]
-		visualizer.update owl.deepCopy(@record[attick][2])
 
-		visualizer.render()
+		visualizer.render(@record[attick][2])
 		@refreshlinesdisplay()
 
 		return [attick, atchange]
 
 	displaynext: (amtticks=null, amtchanges=@runstep) ->
 		return  if @state != "playing" and @state != "paused"
-		amtticks?=amtchanges*17
+		amtticks?=amtchanges*101
 
 		@checksetup()
 
@@ -267,7 +323,7 @@ class coderunner_class
 		advancedticks = (shown?[0] ? @showingtick) - @showingtick
 		advancedchanges = (shown?[1] ? @showingchange) - @showingchange
 
-		if amtticks > 0 and advancedticks == 0
+		if amtticks > 0 and advancedticks == 0 and @showingtick > 0
 			console.log "Didn't advance, stopping run at tick #{@showingtick}"
 			@stoprun()
 
@@ -353,15 +409,14 @@ class coderunner_class
 			@stoprun()
 			throw error
 
+		console.log "vars:" + visualizer.getvars()
 		console.log @code
 		try
-			jscode = CoffeeScript.compile(@code, {'hook': 'coderunner.coffee_hook'})
+			jscode = CoffeeScript.compile(@code, {'hook': 'coderunner.coffee_hook', 'forceglobals': visualizer.getvars()})
 		catch error
 			alert "Internal Error!  Contact algovis developer.\n#{error}"
-		visparam = visualizer.getvaluesasparameter()
-		jscode = jscode.replace /coderunner.coffee_hook\(/g, (g0) -> g0 + visparam + ","
 
-		jscode = "function(sortinglist , #{visualizer.getinitstmt()} ) { #{jscode}; return 'finished'; }"
+		jscode = "function(sortinglist) { with (visualizer.valuesobj) { #{jscode}; }; return 'finished'; }"
 
 		console.log "deux:" + jscode
 
@@ -374,9 +429,9 @@ class coderunner_class
 	getTimestamp: ->
 		(new Date).getTime()
 
-	coffee_hook: (visvalues, eventtype, lineno, expression) ->
+	coffee_hook: (eventtype, lineno, expression) ->
 		@highlightline = lineno if lineno?
-		@nexttick visvalues
+		@nexttick()
 		switch eventtype
 			when "beforeexpression"
 				@stack.push @highlightline
